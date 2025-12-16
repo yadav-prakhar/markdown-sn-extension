@@ -18,6 +18,9 @@ Convert Markdown to ServiceNow journal field format directly in your browser. Wr
 - **⌨️ Keyboard Shortcut** — `Cmd+Shift+M` (Mac) / `Ctrl+Shift+M` (Windows/Linux)
 - **🔒 Privacy-First** — All processing happens locally, no data sent to servers
 
+| <img width="600" alt="convert through popup" src="https://github.com/user-attachments/assets/5bdb4d43-d8ec-4911-8278-91b46bd185d6" /> | <img width="600" alt="convert through button" src="https://github.com/user-attachments/assets/ff1b108b-efe0-43bd-bf84-0f8c3c3eeaff" /> | <img width="1400" height="900" alt="convert through context menu" src="https://github.com/user-attachments/assets/f036e076-16fd-48b2-af1b-523d7ea0f742" /> |
+| -- | -- | -- |
+
 ## Installation
 
 1. **Download** the latest release from [GitHub Releases](https://github.com/yadav-prakhar/markdown-sn-extension/releases) or clone the repository:
