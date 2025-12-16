@@ -1,0 +1,60 @@
+{
+  "manifest_version": 3,
+  "name": "Markdown to ServiceNow",
+  "version": "1.0.0",
+  "description": "Convert Markdown to ServiceNow journal format. Features popup converter, context menu, and in-page buttons on ServiceNow journal fields.",
+  "author": "Prakhar Yadav",
+  "homepage_url": "https://github.com/prakhar-yadav/markdown-sn-extension",
+  "permissions": [
+    "activeTab",
+    "contextMenus",
+    "clipboardWrite",
+    "storage"
+  ],
+  "host_permissions": [
+    "*://*.service-now.com/*",
+    "*://*.servicenow.com/*"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/Icon16.png",
+      "32": "icons/Icon32.png",
+      "48": "icons/Icon48.png",
+      "128": "icons/Icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/Icon16.png",
+    "32": "icons/Icon32.png",
+    "48": "icons/Icon48.png",
+    "128": "icons/Icon128.png"
+  },
+  "background": {
+    "service_worker": "background/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.service-now.com/*", "*://*.servicenow.com/*"],
+      "js": ["lib/markdown-servicenow.js", "content/content.js"],
+      "css": ["content/content.css"],
+      "all_frames": true,
+      "run_at": "document_idle"
+    }
+  ],
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+M",
+        "mac": "Command+Shift+M"
+      },
+      "description": "Open Markdown converter popup"
+    }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/Icon.svg"],
+      "matches": ["*://*.service-now.com/*", "*://*.servicenow.com/*"]
+    }
+  ]
+}

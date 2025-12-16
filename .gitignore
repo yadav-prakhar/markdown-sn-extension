@@ -1,0 +1,18 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build artifacts
+*.crx
+*.pem
+*.zip
+
+# Store assets (keep locally, don't commit)
+store-assets/
+screenshots/

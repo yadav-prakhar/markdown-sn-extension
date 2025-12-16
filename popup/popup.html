@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Markdown to ServiceNow</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📝 MD → ServiceNow</h1>
+    </header>
+    
+    <div class="editor-section">
+      <div class="panel">
+        <label for="input">Markdown Input</label>
+        <textarea 
+          id="input" 
+          placeholder="Paste your markdown here..."
+          spellcheck="false"
+        ></textarea>
+      </div>
+      
+      <div class="panel">
+        <label for="output">
+          ServiceNow Output
+          <span class="char-count" id="charCount">0 chars</span>
+        </label>
+        <textarea 
+          id="output" 
+          readonly 
+          placeholder="Converted output will appear here..."
+        ></textarea>
+      </div>
+    </div>
+    
+    <div class="actions">
+      <button id="copyBtn" class="btn btn-primary" disabled>
+        <span class="btn-icon">📋</span>
+        Copy to Clipboard
+      </button>
+      <button id="clearBtn" class="btn btn-secondary">
+        <span class="btn-icon">🗑️</span>
+        Clear
+      </button>
+    </div>
+    
+    <div id="toast" class="toast hidden">
+      <span class="toast-icon">✓</span>
+      <span class="toast-message">Copied to clipboard!</span>
+    </div>
+  </div>
+  
+  <script src="../lib/markdown-servicenow.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

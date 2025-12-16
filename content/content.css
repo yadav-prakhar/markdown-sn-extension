@@ -1,0 +1,76 @@
+/* Markdown to ServiceNow - Content Script Styles */
+
+.md-sn-toolbar {
+  display: flex;
+  gap: 4px;
+  pointer-events: auto;
+}
+
+.md-sn-convert-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 5px !important;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  opacity: 0.8;
+}
+
+.md-sn-convert-btn img {
+  width: 30px;
+  height: 30px;
+  display: block;
+  margin: 0 !important;
+}
+
+.md-sn-convert-btn:hover {
+  opacity: 1;
+}
+
+.md-sn-convert-btn:active {
+  opacity: 0.6;
+}
+
+/* Notification toast */
+.md-sn-notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 12px 20px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  z-index: 999999;
+  animation: md-sn-slide-in 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.md-sn-notification-success {
+  background: #00c853;
+  color: white;
+}
+
+.md-sn-notification-error {
+  background: #ff5252;
+  color: white;
+}
+
+.md-sn-notification-hide {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+}
+
+@keyframes md-sn-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
