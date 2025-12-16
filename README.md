@@ -1,14 +1,16 @@
-<p align="center">
+<div align="center">
   <img src="icons/Icon128.png" alt="Markdown to ServiceNow" width="128" height="128">
-</p>
 
-<h1 align="center">Markdown to ServiceNow</h1>
+  <h1 align="center">Markdown to ServiceNow</h1>
 
-<p align="center">
+[Outputs](#output) • [Installation](#installation) • [Usage](#usage) • [Support](#support)
+
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
-</p>
+
+</div>
 
 Convert Markdown to ServiceNow journal field format directly in your browser. Write in Markdown, convert with one click, and paste into ServiceNow.
+
 
 ## Features
 
@@ -18,8 +20,11 @@ Convert Markdown to ServiceNow journal field format directly in your browser. Wr
 - **⌨️ Keyboard Shortcut** — `Cmd+Shift+M` (Mac) / `Ctrl+Shift+M` (Windows/Linux)
 - **🔒 Privacy-First** — All processing happens locally, no data sent to servers
 
-| <img width="600" alt="convert through popup" src="https://github.com/user-attachments/assets/5bdb4d43-d8ec-4911-8278-91b46bd185d6" /> | <img width="600" alt="convert through button" src="https://github.com/user-attachments/assets/ff1b108b-efe0-43bd-bf84-0f8c3c3eeaff" /> | <img width="1400" height="900" alt="convert through context menu" src="https://github.com/user-attachments/assets/f036e076-16fd-48b2-af1b-523d7ea0f742" /> |
-| -- | -- | -- |
+### Output
+
+| <img width="600" alt="screenshot 1" src="https://github.com/user-attachments/assets/c4281708-21ae-40fb-8bb3-e925475cb1e1" /> | <img width="600" alt="screenshot 2" src="https://github.com/user-attachments/assets/1263da67-1041-4a7c-9f4f-59f8e6252dae" /> |
+| -- | -- |
+
 
 ## Installation
 
@@ -42,17 +47,23 @@ Convert Markdown to ServiceNow journal field format directly in your browser. Wr
 3. Click **Copy to Clipboard**
 4. Paste into ServiceNow journal field
 
+<img width="600" alt="convert through popup" src="https://github.com/user-attachments/assets/5bdb4d43-d8ec-4911-8278-91b46bd185d6" />
+
 ### Context Menu
 
 1. Select text on any webpage
 2. Right-click → **Convert Markdown to ServiceNow**
 3. Converted text is copied to clipboard
 
+<img width="1400" height="900" alt="convert through context menu" src="https://github.com/user-attachments/assets/f036e076-16fd-48b2-af1b-523d7ea0f742" />
+
 ### On ServiceNow
 
-1. Look for the **MD→SN** button near journal/comment fields
+1. Look for the &nbsp; <img src="./icons/Icon.svg" alt="Markdown ServiceNow extension icon" width="23"> &nbsp; button near journal/comment fields
 2. Write markdown in the field
 3. Click the button to convert in-place
+
+<img width="600" alt="convert through button" src="https://github.com/user-attachments/assets/ff1b108b-efe0-43bd-bf84-0f8c3c3eeaff" />
 
 ## Supported Markdown
 
