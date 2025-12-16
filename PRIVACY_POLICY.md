@@ -45,8 +45,8 @@ Any changes to this privacy policy will be posted here and the "Last Updated" da
 
 ## Contact
 
-If you have questions about this privacy policy, please open an issue on the [GitHub repository](https://github.com/prakhar-yadav/markdown-sn-extension/issues).
+If you have questions about this privacy policy, please open an issue on the [GitHub repository](https://github.com/yadav-prakhar/markdown-sn-extension/issues).
 
 ## Open Source
 
-This extension is open source. You can review the complete source code on [GitHub](https://github.com/prakhar-yadav/markdown-sn-extension).
+This extension is open source. You can review the complete source code on [GitHub](https://github.com/yadav-prakhar/markdown-sn-extension).

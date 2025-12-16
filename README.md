@@ -20,9 +20,9 @@ Convert Markdown to ServiceNow journal field format directly in your browser. Wr
 
 ## Installation
 
-1. **Download** the latest release from [GitHub Releases](https://github.com/prakhar-yadav/markdown-sn-extension/releases) or clone the repository:
+1. **Download** the latest release from [GitHub Releases](https://github.com/yadav-prakhar/markdown-sn-extension/releases) or clone the repository:
    ```bash
-   git clone https://github.com/prakhar-yadav/markdown-sn-extension.git
+   git clone https://github.com/yadav-prakhar/markdown-sn-extension.git
    ```
 2. Open Chrome and go to `chrome://extensions/`
 3. Enable **Developer mode** (toggle in top-right)
@@ -102,7 +102,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ```bash
 # Clone the repository
-git clone https://github.com/prakhar-yadav/markdown-sn-extension.git
+git clone https://github.com/yadav-prakhar/markdown-sn-extension.git
 
 # Load in Chrome
 # 1. Go to chrome://extensions/
@@ -121,6 +121,6 @@ MIT License - see [LICENSE](./LICENSE) for details.
 
 ## Support
 
-- 🐛 [Report a bug](https://github.com/prakhar-yadav/markdown-sn-extension/issues/new?labels=bug)
-- 💡 [Request a feature](https://github.com/prakhar-yadav/markdown-sn-extension/issues/new?labels=enhancement)
+- 🐛 [Report a bug](https://github.com/yadav-prakhar/markdown-sn-extension/issues/new?labels=bug)
+- 💡 [Request a feature](https://github.com/yadav-prakhar/markdown-sn-extension/issues/new?labels=enhancement)
 - ⭐ Star this repo if you find it useful!

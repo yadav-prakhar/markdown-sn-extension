@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Convert Markdown to ServiceNow journal format. Features popup converter, context menu, and in-page buttons on ServiceNow journal fields.",
   "author": "Prakhar Yadav",
-  "homepage_url": "https://github.com/prakhar-yadav/markdown-sn-extension",
+  "homepage_url": "https://github.com/yadav-prakhar/markdown-sn-extension",
   "permissions": [
     "activeTab",
     "contextMenus",
