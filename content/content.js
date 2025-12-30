@@ -146,20 +146,15 @@
 
     const toolbar = createToolbar();
     
-    // Try different positioning strategies
-    const wrapper = textarea.parentElement;
-    
-    // Strategy 1: Insert after textarea
-    if (textarea.nextSibling) {
-      textarea.parentNode.insertBefore(toolbar, textarea.nextSibling);
-    } else {
-      textarea.parentNode.appendChild(toolbar);
-    }
-    
+    // Position toolbar after the textarea
+    const textareaParent = textarea.parentNode;
+
+    // Insert toolbar before the parent's next sibling (to appear after textarea)
+    textareaParent.parentNode.insertBefore(toolbar, textareaParent.nextSibling);
+
     // Style toolbar for inline display
-    toolbar.style.display = 'inline-block';
-    toolbar.style.marginTop = '4px';
-    toolbar.style.marginLeft = '4px';
+    toolbar.style.display = "inline-block";
+    toolbar.style.margin = "4px 0 12px 4px";
 
     // Add click handler
     toolbar.querySelector(`.${BUTTON_CLASS}`).addEventListener('click', (e) => {
