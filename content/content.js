@@ -148,6 +148,7 @@
     
     // Position toolbar after the textarea
     const textareaParent = textarea.parentNode;
+    if (!textareaParent || !textareaParent.parentNode) return;
 
     // Insert toolbar before the parent's next sibling (to appear after textarea)
     textareaParent.parentNode.insertBefore(toolbar, textareaParent.nextSibling);
