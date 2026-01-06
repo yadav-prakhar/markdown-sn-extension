@@ -16,7 +16,6 @@
     // Classic UI - specific journal fields (exact match at end)
     'textarea[id$=".work_notes"]',
     'textarea[id$=".comments"]',
-    'textarea[id$=".close_notes"]',
     // Activity stream textareas
     'textarea[id^="activity-stream"]',
     '#activity-stream-textarea',
