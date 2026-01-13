@@ -23,6 +23,7 @@ Convert Markdown to ServiceNow journal field format directly in your browser. Wr
 
 | <img width="600" alt="screenshot 1" src="https://github.com/user-attachments/assets/c4281708-21ae-40fb-8bb3-e925475cb1e1" /> | <img width="600" alt="screenshot 2" src="https://github.com/user-attachments/assets/1263da67-1041-4a7c-9f4f-59f8e6252dae" /> |
 | -- | -- |
+| <img width="600" alt="Alerts" src="https://github.com/user-attachments/assets/ef1b8666-81d9-475f-90f4-8916b29b2ef9" /> | Built with 💚 |
 
 
 ## Installation
@@ -81,7 +82,7 @@ Convert Markdown to ServiceNow journal field format directly in your browser. Wr
 | Unordered lists | `- item` or `* item` |
 | Ordered lists | `1. item` |
 | Blockquotes | `> quote` |
-| Alerts | `> [!NOTE]`, `> [!TIP]`, `> [!WARNING]`, etc. |
+| Alerts | `> [!STATUS]`, `> [!IMPORTANT]`, `> [!SUCCESS]`, `> [!NOTE]`, `> [!TIP]`, `> [!ATTENTION]`, `> [!WARNING]`, `> [!CAUTION]`, `> [!BLOCKER]` |
 | Tables | Pipe-delimited tables |
 | Horizontal rules | `---` or `***` |
 
