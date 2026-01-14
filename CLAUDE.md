@@ -104,7 +104,7 @@ The extension follows the Chrome Extension V3 architecture with four main compon
 
 ### Message Passing
 
-- Background → Content: `{action: 'replaceSelection', text: converted}`
+- Background → Content: `{action: 'convertSelection'}` (content script retrieves selection and converts)
 - Popup/Content → Background: `{action: 'convert', text: markdown}` (returns `{success, result}`)
 
 ## Supported Markdown Syntax
