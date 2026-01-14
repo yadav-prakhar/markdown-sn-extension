@@ -231,28 +231,75 @@
 
   // Handle messages from background script
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.action === 'replaceSelection') {
+    if (message.action === 'convertSelection') {
       const activeElement = document.activeElement;
-      
-      if (activeElement && activeElement.tagName === 'TEXTAREA') {
+      let selectedText = '';
+      let isTextarea = false;
+
+      // Check textarea/input selection first (window.getSelection doesn't work for these)
+      if (activeElement && (activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'INPUT')) {
         const start = activeElement.selectionStart;
         const end = activeElement.selectionEnd;
-        const text = activeElement.value;
-        
-        activeElement.value = text.substring(0, start) + message.text + text.substring(end);
-        activeElement.dispatchEvent(new Event('input', { bubbles: true }));
-        
-        sendResponse({ success: true });
-      } else {
-        // Copy to clipboard instead
-        navigator.clipboard.writeText(message.text).then(() => {
-          showNotification('Copied to clipboard!', 'success');
-          sendResponse({ success: true });
-        }).catch(() => {
-          sendResponse({ success: false });
-        });
+        if (start !== end) {
+          selectedText = activeElement.value.substring(start, end);
+          isTextarea = true;
+        }
       }
-      
+
+      // Fall back to DOM selection
+      if (!selectedText) {
+        const selection = window.getSelection();
+        selectedText = selection?.toString() || '';
+      }
+
+      selectedText = selectedText.trim();
+
+      // If no selection in this frame, don't respond - let another frame handle it
+      // (message is sent to all frames due to all_frames: true in manifest)
+      if (!selectedText) {
+        return false;
+      }
+
+      try {
+        // Convert the markdown
+        if (typeof markdownServicenow === 'undefined') {
+          console.error('MD-SN: Library not loaded');
+          showNotification('Library not loaded', 'error');
+          sendResponse({ success: false, error: 'Library not loaded' });
+          return true;
+        }
+
+        const converted = markdownServicenow.convertMarkdownToServiceNow(selectedText);
+
+        if (isTextarea) {
+          // Replace selection in textarea/input
+          const start = activeElement.selectionStart;
+          const end = activeElement.selectionEnd;
+          const text = activeElement.value;
+
+          activeElement.value = text.substring(0, start) + converted + text.substring(end);
+          activeElement.dispatchEvent(new Event('input', { bubbles: true }));
+          activeElement.dispatchEvent(new Event('change', { bubbles: true }));
+
+          showNotification('Converted successfully!', 'success');
+          sendResponse({ success: true });
+        } else {
+          // Not in an editable field, copy to clipboard
+          navigator.clipboard.writeText(converted).then(() => {
+            showNotification('Converted and copied to clipboard!', 'success');
+            sendResponse({ success: true });
+          }).catch((error) => {
+            console.error('MD-SN: Clipboard error', error);
+            showNotification('Conversion succeeded, clipboard failed', 'error');
+            sendResponse({ success: false, error: 'Clipboard error' });
+          });
+        }
+      } catch (error) {
+        console.error('MD-SN: Conversion error', error);
+        showNotification('Conversion error: ' + error.message, 'error');
+        sendResponse({ success: false, error: error.message });
+      }
+
       return true;
     }
   });

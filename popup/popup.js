@@ -32,6 +32,7 @@ function convert() {
     charCountEl.textContent = `${result.length} chars`;
     copyBtn.disabled = false;
   } catch (error) {
+    console.error('MD-SN Popup: Conversion error:', error);
     outputEl.value = `Error: ${error.message}`;
     copyBtn.disabled = true;
   }
