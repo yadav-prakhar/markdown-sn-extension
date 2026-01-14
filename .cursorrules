@@ -1,0 +1,58 @@
+You are working on a Chrome Extension (Manifest V3) called "Markdown to ServiceNow".
+
+## Project Context
+- Pure JavaScript Chrome extension - NO build process
+- Converts Markdown to ServiceNow journal field HTML format
+- Three conversion methods: popup, context menu, in-page buttons
+- Test framework: Vitest with happy-dom
+
+## Quick Commands
+```bash
+npm test              # Run all tests
+npm run test:watch    # Watch mode
+npm run test:coverage # With coverage report
+```
+
+## Architecture Overview
+- `background/background.js` - Service worker, handles context menu
+- `content/content.js` - Injected into ServiceNow, adds convert buttons
+- `popup/popup.js` - Popup UI with live conversion
+- `lib/markdown-servicenow.js` - Core conversion library (self-contained)
+
+## Message Passing
+- Background sends `{action: 'convertSelection'}` to content script
+- Content script does the actual conversion (not background)
+- Popup can send `{action: 'convert', text}` to background for conversion
+
+## Critical Rules
+1. NO npm packages in runtime code - library must be self-contained
+2. Prefix CSS classes with `md-sn-` to avoid ServiceNow conflicts
+3. Prefix console.log with `MD-SN:` for filtering
+4. Library must load BEFORE content.js in manifest
+5. Always run `npm test` before committing
+
+## When Adding Features
+1. Add conversion logic to `lib/markdown-servicenow.js`
+2. Add test sample to `tests/fixtures/markdown-samples.js`
+3. Add tests to appropriate file in `tests/unit/lib/`
+4. Update CLAUDE.md if adding new markdown syntax
+
+## When Modifying Field Detection
+1. Edit `JOURNAL_SELECTORS` or `EXCLUDED_PATTERNS` in `content/content.js`
+2. Add tests to `tests/unit/content/field-detection.test.js`
+
+## Alert Types (10 total)
+STATUS, IMPORTANT, SUCCESS, NOTE, TIP, ATTENTION, WARNING, CAUTION, BLOCKER, QUESTION
+
+## Test Pattern
+```javascript
+import { markdownSamples } from '../../fixtures/markdown-samples.js';
+import * as markdownServicenow from '../../../lib/markdown-servicenow.js';
+
+const convert = (input) =>
+  markdownServicenow.convertMarkdownToServiceNow(input, { skipCodeTags: true });
+
+it('should convert X', () => {
+  expect(convert('**bold**')).toContain('<strong>bold</strong>');
+});
+```

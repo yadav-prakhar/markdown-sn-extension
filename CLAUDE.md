@@ -1,120 +1,314 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Project instructions for Claude Code when working with this repository.
 
 ## Project Overview
 
-This is a Chrome extension (Manifest V3) that converts Markdown to ServiceNow journal field format. The extension provides three ways to convert: popup converter, context menu, and in-page buttons on ServiceNow journal fields.
+**Markdown to ServiceNow** is a Chrome Extension (Manifest V3) that converts Markdown to ServiceNow journal field format. It provides three conversion methods:
+1. **Popup converter** - Click extension icon, paste markdown, copy output
+2. **Context menu** - Right-click selected text to convert
+3. **In-page buttons** - Convert buttons on ServiceNow journal fields
 
-### Core Dependencies
+**Version:** 1.1.3
+**Library:** markdown-servicenow v1.0.5 (bundled)
 
-- **markdown-servicenow library** (`lib/markdown-servicenow.js`) - Bundled conversion library (based on npm package v1.0.2) that performs the actual Markdown to ServiceNow HTML conversion
-- No build process or package.json - this is a pure JavaScript extension that can be loaded directly into Chrome
+## Quick Reference
+
+```bash
+# Install dependencies (also installs git hooks)
+npm install
+
+# Run tests
+npm test
+
+# Run tests with watch mode
+npm run test:watch
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run specific test file
+npm test -- tests/unit/lib/markdown-blockquotes.test.js
+
+# Manually install git hooks
+bash scripts/install-hooks.sh
+```
+
+## Git Hooks
+
+**Pre-push hook** - Automatically runs tests before pushing. Push is blocked if tests fail.
+
+Hooks are installed automatically via `npm install` (prepare script). To reinstall manually:
+```bash
+bash scripts/install-hooks.sh
+```
+
+## Project Structure
+
+```
+├── manifest.json              # Chrome Extension manifest (V3)
+├── background/
+│   └── background.js          # Service worker - context menu, message handling
+├── content/
+│   ├── content.js             # Injected into ServiceNow pages
+│   └── content.css            # Toolbar and notification styles
+├── popup/
+│   ├── popup.html             # Popup UI structure
+│   ├── popup.js               # Live conversion with debouncing
+│   └── popup.css              # Popup styles
+├── lib/
+│   └── markdown-servicenow.js # Bundled conversion library
+├── icons/
+│   ├── Icon.svg               # Source SVG
+│   └── Icon{16,32,48,64,128}.png
+├── tests/
+│   ├── fixtures/              # Test data (markdown-samples.js)
+│   ├── mocks/                 # Chrome API mocks
+│   ├── setup/                 # Vitest setup and helpers
+│   └── unit/                  # Unit tests by component
+├── vitest.config.js           # Test configuration
+└── package.json               # Test dependencies only
+```
 
 ## Architecture
 
-### Extension Components
+### Component Responsibilities
 
-The extension follows the Chrome Extension V3 architecture with four main components:
+| Component | File | Purpose |
+|-----------|------|---------|
+| **Background Worker** | `background/background.js` | Context menu, message routing |
+| **Content Script** | `content/content.js` | Field detection, toolbar injection, in-place conversion |
+| **Popup** | `popup/popup.js` | Standalone converter UI |
+| **Library** | `lib/markdown-servicenow.js` | Core markdown conversion logic |
 
-1. **Background Service Worker** (`background/background.js`)
-   - Loads markdown-servicenow library via `importScripts()`
-   - Creates and handles context menu for selected text conversion
-   - Listens for messages from popup and content scripts
-   - Manages clipboard operations and notifications
+### Message Flow
 
-2. **Content Script** (`content/content.js`)
-   - Injected into all ServiceNow pages (`*.service-now.com`, `*.servicenow.com`)
-   - Scans for journal field textareas (work_notes, comments, activity streams)
-   - Dynamically injects convert buttons via toolbars positioned outside textarea parents
-   - Uses MutationObserver to detect dynamically added fields
-   - Handles in-place conversion and triggers ServiceNow's change detection events
-   - **Field Detection Logic**: Uses specific selectors (`JOURNAL_SELECTORS`) and explicitly excludes non-journal fields like description, short_description, resolution_notes via `EXCLUDED_PATTERNS`
+```
+┌─────────────┐     convertSelection      ┌─────────────────┐
+│  Background │ ───────────────────────▶  │  Content Script │
+│   Worker    │                           │  (does convert) │
+└─────────────┘                           └─────────────────┘
 
-3. **Popup UI** (`popup/popup.html`, `popup.js`, `popup.css`)
-   - Standalone converter interface
-   - Debounced live conversion (150ms delay)
-   - Persists last input in chrome.storage.local
-   - Copy to clipboard functionality
+┌─────────────┐   {action:'convert',text}  ┌─────────────────┐
+│   Popup     │ ──────────────────────────▶│    Background   │
+│             │◀────────────────────────── │  (returns HTML) │
+└─────────────┘    {success, result}       └─────────────────┘
+```
 
-4. **Icons** (`icons/`)
-   - Multiple sizes (16x16, 32x32, 48x48, 64x64, 128x128)
-   - SVG source available for regeneration via `scripts/generate-icons.js` (Node.js script)
+**Key messages:**
+- `{action: 'convertSelection'}` - Background → Content: trigger conversion of selected text
+- `{action: 'convert', text}` - Popup → Background: convert text, returns `{success, result}`
 
-### Key Interaction Patterns
+### Content Script Field Detection
 
-**Context Menu Flow**: User selects text → Right-clicks → Background worker converts → Sends message to content script → Content script replaces selection or copies to clipboard
+**Targeted selectors** (journal fields only):
+```javascript
+const JOURNAL_SELECTORS = [
+  'textarea[id$=".work_notes"]',
+  'textarea[id$=".comments"]',
+  'textarea[id^="activity-stream"]',
+  '#activity-stream-textarea',
+  '#activity-stream-work_notes-textarea',
+  '#activity-stream-comments-textarea',
+  '[data-type="journal_input"] textarea'
+];
+```
 
-**In-Page Button Flow**: Content script detects journal fields → Creates toolbar with convert button → User clicks button → Converts textarea value in-place → Triggers ServiceNow events (`input`, `change`, `keyup`, `onchange`)
+**Excluded patterns** (not journal fields):
+- `description`, `short_description`, `resolution_notes`, `justification`
 
-**Popup Flow**: User enters Markdown → Live conversion with debouncing → Click copy button → Uses navigator.clipboard API
+### Library Exports
 
-### ServiceNow Integration Details
+```javascript
+markdownServicenow.convertMarkdownToServiceNow(text, options)
+// options: { skipCodeTags: bool, skipPrettyPrint: bool }
 
-- Content script runs at `document_idle` in `all_frames: true` to catch iframes
-- Toolbar positioning: Inserted as sibling AFTER textarea's parent node with `insertBefore(toolbar, textareaParent.nextSibling)`
-- Field enhancement tracking via `dataset.mdSnEnhanced` to prevent duplicate buttons
-- Explicit event triggering after conversion ensures ServiceNow's onChange handlers detect the change
+// Individual converters (for testing):
+markdownServicenow.convertHeaders(text)
+markdownServicenow.convertTextFormatting(text)
+markdownServicenow.convertCodeBlocks(text)
+markdownServicenow.convertInlineCode(text)
+markdownServicenow.convertImages(text)
+markdownServicenow.convertLinks(text)
+markdownServicenow.convertHorizontalRules(text)
+markdownServicenow.convertUnorderedLists(text)
+markdownServicenow.convertOrderedLists(text)
+markdownServicenow.convertBlockquotes(text)
+markdownServicenow.convertTables(text)
+```
+
+## Supported Markdown
+
+| Element | Syntax |
+|---------|--------|
+| Headers | `#` through `######` |
+| Bold | `**text**` or `__text__` |
+| Italic | `*text*` or `_text_` |
+| Bold+Italic | `***text***` |
+| Strikethrough | `~~text~~` |
+| Highlight | `==text==` |
+| Inline code | `` `code` `` |
+| Code blocks | ` ``` ` fenced |
+| Links | `[text](url)` |
+| Images | `![alt](url)` |
+| Unordered lists | `- item` or `* item` |
+| Ordered lists | `1. item` |
+| Blockquotes | `> quote` |
+| Tables | Pipe-delimited |
+| Horizontal rules | `---` or `***` |
+
+### Alert Blocks
+
+All 10 alert types with their colors:
+
+| Alert | Syntax | Background |
+|-------|--------|------------|
+| STATUS | `> [!STATUS]` | `#f1f3f5` gray |
+| IMPORTANT | `> [!IMPORTANT]` | `#f4ecff` purple |
+| SUCCESS | `> [!SUCCESS]` | `#e0f2f1` teal |
+| NOTE | `> [!NOTE]` | `#eaf2f8` blue |
+| TIP | `> [!TIP]` | `#e6fffb` cyan |
+| ATTENTION | `> [!ATTENTION]` | `#f6efe3` tan |
+| WARNING | `> [!WARNING]` | `#faf3d1` yellow |
+| CAUTION | `> [!CAUTION]` | `#fdecef` pink |
+| BLOCKER | `> [!BLOCKER]` | `#ede7f6` violet |
+| QUESTION | `> [!QUESTION]` | `#f6f4ea` beige |
+
+## Testing
+
+### Test Structure
+
+```
+tests/
+├── fixtures/markdown-samples.js    # Input samples for all markdown types
+├── mocks/chrome-api.js             # Chrome extension API mocks
+├── setup/
+│   ├── vitest.setup.js             # Global test setup (DOM, Chrome)
+│   └── test-helpers.js             # Shared test utilities
+└── unit/
+    ├── lib/                        # Library conversion tests
+    ├── background/                 # Service worker tests
+    ├── content/                    # Content script tests
+    └── popup/                      # Popup UI tests
+```
+
+### Writing Tests
+
+```javascript
+// Import samples and library
+import { markdownSamples } from '../../fixtures/markdown-samples.js';
+import * as markdownServicenow from '../../../lib/markdown-servicenow.js';
+
+// Helper to skip [code] wrapper
+const convert = (input) =>
+  markdownServicenow.convertMarkdownToServiceNow(input, { skipCodeTags: true });
+
+// Test pattern
+it('should convert X to Y', () => {
+  const input = markdownSamples.someInput;
+  const output = convert(input);
+  expect(output).toContain('<expected>');
+});
+```
+
+### Coverage Thresholds
+
+```javascript
+// vitest.config.js
+thresholds: {
+  lines: 80,
+  functions: 80,
+  branches: 75,
+  statements: 80
+}
+```
 
 ## Development Workflow
 
 ### Loading the Extension
 
-```bash
-# No build step required - load directly into Chrome
-# 1. Navigate to chrome://extensions/
-# 2. Enable "Developer mode"
-# 3. Click "Load unpacked"
-# 4. Select the extension root directory
-```
+1. Go to `chrome://extensions/`
+2. Enable "Developer mode"
+3. Click "Load unpacked"
+4. Select the extension root directory
 
-### Testing Changes
+### After Code Changes
 
-1. Make code changes to JS/CSS/HTML files
+1. Make changes to JS/CSS/HTML files
 2. Go to `chrome://extensions/`
-3. Click reload icon for "Markdown to ServiceNow" extension
-4. Test on a ServiceNow instance (requires access to `*.service-now.com` or `*.servicenow.com`)
+3. Click reload icon on the extension
+4. Test on a ServiceNow instance
 
 ### Debugging
 
-- **Background worker**: `chrome://extensions/` → Click "service worker" link under extension
-- **Content script**: Open DevTools on ServiceNow page, check Console for `MD-SN:` prefixed logs
-- **Popup**: Right-click extension icon → Inspect popup
+| Component | How to Debug |
+|-----------|--------------|
+| Background worker | `chrome://extensions/` → Click "service worker" link |
+| Content script | DevTools on ServiceNow page, filter console by `MD-SN:` |
+| Popup | Right-click extension icon → Inspect popup |
 
-## Important Implementation Notes
+## Implementation Notes
 
-### Content Script Injection
+### Content Script Injection Order
 
-- The `markdown-servicenow.js` library MUST be listed before `content.js` in manifest.json's content_scripts.js array
-- Content script accesses library via global `markdownServicenow` object
-- Background worker uses `importScripts()` for the same library
+The library MUST load before content.js. In `manifest.json`:
+```json
+"js": ["lib/markdown-servicenow.js", "content/content.js"]
+```
 
-### Field Detection
+### Toolbar Positioning
 
-- Only targets journal fields: work_notes, comments, activity stream textareas
-- Explicitly excludes description fields to avoid interfering with normal text entry
-- Logs all textarea IDs/names in console for debugging selector issues
-- Fallback: Scans ALL textareas and filters via `isJournalField()` if selectors miss fields
+Toolbar is inserted OUTSIDE textarea parent to avoid ServiceNow's DOM manipulations:
+```javascript
+textareaParent.parentNode.insertBefore(toolbar, textareaParent.nextSibling);
+```
 
-### Toolbar Styling
+### Event Triggering for ServiceNow
 
-- Toolbar must be positioned outside textarea parent to avoid ServiceNow's DOM manipulations
-- Uses inline styles (`display: inline-block`, `margin: 4px 0 12px 4px`) for consistent positioning
-- CSS classes: `.md-sn-toolbar`, `.md-sn-convert-btn`, `.md-sn-notification`
+After converting textarea content, trigger these events:
+```javascript
+textarea.dispatchEvent(new Event('input', { bubbles: true }));
+textarea.dispatchEvent(new Event('change', { bubbles: true }));
+textarea.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
+if (typeof textarea.onchange === 'function') textarea.onchange();
+```
 
-### Message Passing
+### Protection System
 
-- Background → Content: `{action: 'convertSelection'}` (content script retrieves selection and converts)
-- Popup/Content → Background: `{action: 'convert', text: markdown}` (returns `{success, result}`)
+The library protects certain content from text formatting:
+1. Code blocks, inline code, images, links are replaced with placeholders
+2. Text formatting (bold/italic) is applied
+3. Placeholders are restored
+4. Then code/images/links are converted to HTML
 
-## Supported Markdown Syntax
+## Common Tasks
 
-Headers (h1-h6), bold, italic, strikethrough, highlight (`==text==`), inline code, code blocks, links, images, lists (ordered/unordered), blockquotes, tables, horizontal rules, and alert blocks (`> [!STATUS]`, `> [!IMPORTANT]`, `> [!SUCCESS]`, `> [!NOTE]`, `> [!TIP]`, `> [!ATTENTION]`, `> [!WARNING]`, `> [!CAUTION]`, `> [!BLOCKER]`)
+### Adding a New Alert Type
+
+1. Add CSS rule in `lib/markdown-servicenow.js` → `ALERT_CSS_RULES`
+2. Add emoji in `ALERT_EMOJIS`
+3. Add type to regex in `convertBlockquotes()` function
+4. Add test sample in `tests/fixtures/markdown-samples.js`
+5. Add test cases in `tests/unit/lib/markdown-blockquotes.test.js`
+
+### Adding a New Field Selector
+
+1. Add selector to `JOURNAL_SELECTORS` in `content/content.js`
+2. Add test cases in `tests/unit/content/field-detection.test.js`
+
+### Updating the Library Version
+
+1. Update `lib/markdown-servicenow.js` (port changes from npm package)
+2. Update version comment at top of file
+3. Run tests to verify: `npm test`
 
 ## Extension Permissions
 
-- `activeTab`: Access active tab for context menu
-- `contextMenus`: Create right-click menu item
-- `clipboardWrite`: Copy converted text
-- `storage`: Persist last popup input
-- Host permissions: `*://*.service-now.com/*`, `*://*.servicenow.com/*`
+| Permission | Purpose |
+|------------|---------|
+| `activeTab` | Access active tab for context menu |
+| `contextMenus` | Create right-click menu |
+| `clipboardWrite` | Copy converted text |
+| `storage` | Persist last popup input |
+| Host: `*.service-now.com/*` | Inject content script |
+| Host: `*.servicenow.com/*` | Inject content script |
