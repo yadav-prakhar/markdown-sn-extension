@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# Pre-push hook: Run tests before pushing
+# Tests must pass or push is blocked
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+echo -e "${YELLOW}Running pre-push hook...${NC}"
+
+# Get the current working directory
+REPO_ROOT=$(git rev-parse --show-toplevel)
+
+# Check if package.json exists (tests are set up)
+if [ -f "$REPO_ROOT/package.json" ]; then
+    echo -e "${YELLOW}Found package.json, running tests...${NC}"
+
+    # Check if node_modules exists
+    if [ ! -d "$REPO_ROOT/node_modules" ]; then
+        echo -e "${YELLOW}Installing dependencies...${NC}"
+        cd "$REPO_ROOT" && npm install
+    fi
+
+    # Run tests
+    cd "$REPO_ROOT" && npm test
+
+    # Check test exit code
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}╔════════════════════════════════════════╗${NC}"
+        echo -e "${RED}║  PUSH BLOCKED: Tests failed!           ║${NC}"
+        echo -e "${RED}║  Fix the failing tests before pushing. ║${NC}"
+        echo -e "${RED}╚════════════════════════════════════════╝${NC}"
+        exit 1
+    fi
+
+    echo -e "${GREEN}✓ All tests passed!${NC}"
+else
+    echo -e "${YELLOW}No package.json found, skipping tests.${NC}"
+fi
+
+echo -e "${GREEN}Pre-push checks complete. Proceeding with push...${NC}"
+exit 0

@@ -16,3 +16,12 @@ Thumbs.db
 # Store assets (keep locally, don't commit)
 store-assets/
 screenshots/
+
+# Testing
+node_modules/
+coverage/
+.nyc_output/
+test-results/
+
+# Local AI assistant settings
+.claude/settings.local.json

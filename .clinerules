@@ -1,0 +1,96 @@
+# Project Rules for AI Assistants
+
+## Project Type
+Chrome Extension (Manifest V3) - Pure JavaScript, no build step
+
+## Key Constraints
+
+### No Build Process
+- This is a pure JS extension loaded directly into Chrome
+- No transpilation, bundling, or compilation
+- Test dependencies (vitest, happy-dom) are dev-only and not part of the extension
+
+### Browser Compatibility
+- Must work in Chrome/Chromium browsers
+- Use ES6+ features supported in modern Chrome
+- No Node.js APIs in extension code (only in tests)
+
+### Chrome Extension APIs
+- Use `chrome.*` APIs, not `browser.*`
+- Background script is a service worker (no DOM access)
+- Content scripts have limited API access
+
+## Code Style
+
+### JavaScript
+- Use strict mode (`'use strict';`)
+- Prefer `const` over `let`, avoid `var`
+- Use arrow functions for callbacks
+- Use template literals for string interpolation
+- Prefix console logs with `MD-SN:` for easy filtering
+
+### CSS
+- Prefix all classes with `md-sn-` to avoid conflicts
+- Use `!important` sparingly (only when overriding ServiceNow styles)
+- Keep z-index values high (999999) for notifications
+
+### Testing
+- Use Vitest with happy-dom environment
+- Mock Chrome APIs via `tests/mocks/chrome-api.js`
+- Add test samples to `tests/fixtures/markdown-samples.js`
+- Test files follow pattern: `*.test.js`
+
+## File Locations
+
+| What | Where |
+|------|-------|
+| New markdown feature | `lib/markdown-servicenow.js` |
+| Field selector | `content/content.js` → `JOURNAL_SELECTORS` |
+| Excluded field | `content/content.js` → `EXCLUDED_PATTERNS` |
+| Test sample | `tests/fixtures/markdown-samples.js` |
+| Chrome mock | `tests/mocks/chrome-api.js` |
+
+## Common Patterns
+
+### Adding Test for New Feature
+```javascript
+// In appropriate test file
+import { markdownSamples } from '../../fixtures/markdown-samples.js';
+import * as markdownServicenow from '../../../lib/markdown-servicenow.js';
+
+const convert = (input) =>
+  markdownServicenow.convertMarkdownToServiceNow(input, { skipCodeTags: true });
+
+describe('New Feature', () => {
+  it('should do X', () => {
+    const input = markdownSamples.newSample;
+    const output = convert(input);
+    expect(output).toContain('<expected>');
+  });
+});
+```
+
+### Triggering ServiceNow Events
+```javascript
+// After modifying textarea value
+textarea.dispatchEvent(new Event('input', { bubbles: true }));
+textarea.dispatchEvent(new Event('change', { bubbles: true }));
+textarea.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
+```
+
+## Do NOT
+
+- Add build tools (webpack, vite for production, etc.)
+- Use npm packages in extension runtime code
+- Modify `manifest.json` structure without understanding MV3
+- Add permissions without documenting why
+- Commit `node_modules/` or `coverage/`
+- Use `eval()` in extension code (CSP violation)
+
+## Always
+
+- Run `npm test` before committing
+- Update CLAUDE.md when adding features
+- Add samples to fixtures when adding markdown syntax
+- Test on actual ServiceNow instance for content script changes
+- Keep the library self-contained (no external dependencies)
