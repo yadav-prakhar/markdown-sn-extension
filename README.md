@@ -24,7 +24,7 @@ Convert Markdown to ServiceNow journal field format directly in your browser. Wr
 
 | <img width="600" alt="screenshot 1" src="https://github.com/user-attachments/assets/c4281708-21ae-40fb-8bb3-e925475cb1e1" /> | <img width="600" alt="screenshot 2" src="https://github.com/user-attachments/assets/1263da67-1041-4a7c-9f4f-59f8e6252dae" /> |
 | -- | -- |
-| <img width="600" alt="Alerts" src="https://github.com/user-attachments/assets/ef1b8666-81d9-475f-90f4-8916b29b2ef9" /> | Built with 💚 |
+| <img width="600" alt="Alerts" src="https://github.com/user-attachments/assets/ef1b8666-81d9-475f-90f4-8916b29b2ef9" /> | <img src="icons/Icon.svg" alt="Markdown to ServiceNow" width="600" height="600"> |
 
 
 ## Installation
@@ -48,7 +48,9 @@ Convert Markdown to ServiceNow journal field format directly in your browser. Wr
 3. Click **Copy to Clipboard**
 4. Paste into ServiceNow journal field
 
-<img width="600" alt="convert through popup" src="https://github.com/user-attachments/assets/5bdb4d43-d8ec-4911-8278-91b46bd185d6" />
+| <img width="600" alt="Screenshot 2026-01-14 at 8 52 40 PM" src="https://github.com/user-attachments/assets/cec1e431-58ed-4d85-9768-4f2f67a73b7d" /> |
+| -- |
+
 
 ### Context Menu
 
@@ -56,7 +58,8 @@ Convert Markdown to ServiceNow journal field format directly in your browser. Wr
 2. Right-click → **Convert Markdown to ServiceNow**
 3. Converted text is copied to clipboard
 
-<img width="1400" height="900" alt="convert through context menu" src="https://github.com/user-attachments/assets/f036e076-16fd-48b2-af1b-523d7ea0f742" />
+| <img width="800" alt="convert through context menu" src="https://github.com/user-attachments/assets/f036e076-16fd-48b2-af1b-523d7ea0f742" /> |
+| -- |
 
 ### On ServiceNow
 
@@ -64,7 +67,8 @@ Convert Markdown to ServiceNow journal field format directly in your browser. Wr
 2. Write markdown in the field
 3. Click the button to convert in-place
 
-<img width="600" alt="convert through button" src="https://github.com/user-attachments/assets/ff1b108b-efe0-43bd-bf84-0f8c3c3eeaff" />
+| <img width="500" alt="convert through button" src="https://github.com/user-attachments/assets/ff1b108b-efe0-43bd-bf84-0f8c3c3eeaff" /> |
+| -- |
 
 ## Supported Markdown
 
@@ -96,13 +100,19 @@ Create your own alert types with custom styling:
 3. Configure name, emoji, and colors
 4. Use in markdown as `> [!YOUR_ALERT_NAME]`
 
-<!-- TODO: Add screenshot of settings modal -->
+| Instant access to presets | Add custom alerts |
+| -- | -- |
+| <img width="400" alt="Screenshot 2026-01-14 at 8 19 40 PM" src="https://github.com/user-attachments/assets/3ab9bd90-2fc6-4f19-8706-20d78776618e" /> | <img width="400" alt="Screenshot 2026-01-14 at 8 20 48 PM" src="https://github.com/user-attachments/assets/b81a7898-ded5-43f0-aad0-98b6eca51bce" /> |
+
 
 ### Modify Presets
 
 You can modify & reset the existing alert presets by clicking the **✏️** (edit) button in the popup.
 
-<!-- TODO: Add screenshot of edit button -->
+| Modify existing alerts | Reset if you miss defaults |
+| -- | -- |
+| <img width="400" alt="Screenshot 2026-01-14 at 8 21 58 PM" src="https://github.com/user-attachments/assets/f4364d6c-3446-40be-bd53-42ff996df1ed" /> | <img width="400" alt="Screenshot 2026-01-14 at 8 22 11 PM" src="https://github.com/user-attachments/assets/53d3c640-5046-4d60-a58c-f09057bfd97b" /> |
+
 
 ### Import/Export
 
@@ -110,7 +120,11 @@ Share your custom alerts with others:
 - **Export**: Download your custom alerts as a JSON file
 - **Import**: Load custom alerts from a JSON file
 
-<!-- TODO: Add screenshot of import/export buttons -->
+| Import & Export your presets | Share with others |
+| -- | -- |
+| <img width="400" alt="import-export" src="https://github.com/user-attachments/assets/9cba0505-dec0-4678-9c8b-972d9f2cc791" /> | <img width="400" alt="Screenshot 2026-01-14 at 8 35 08 PM" src="https://github.com/user-attachments/assets/f7cd5553-d0c5-417b-bf6d-7c0c5bff21d1" /> |
+
+
 
 ## Project Structure
 
