@@ -288,4 +288,148 @@ describe('Blockquotes and Alerts', () => {
       expect(typeof markdownServicenow.convertBlockquotes).toBe('function');
     });
   });
+
+  describe('Custom alert types', () => {
+    const customAlerts = {
+      myalert: {
+        displayName: 'MY ALERT',
+        emoji: '🎯',
+        backgroundColor: '#f0f0f0',
+        textColor: '#333333',
+        borderColor: '#666666'
+      }
+    };
+
+    it('should convert custom alert type', () => {
+      const input = '> [!MYALERT]\n> Custom alert content';
+      const output = markdownServicenow.convertMarkdownToServiceNow(input, {
+        skipCodeTags: true,
+        customAlerts
+      });
+      expect(output).toContain('<p class="myalert">');
+      expect(output).toContain('🎯');
+      expect(output).toContain('MY ALERT:');
+      expect(output).toContain('Custom alert content');
+    });
+
+    it('should generate CSS for custom alert', () => {
+      const input = '> [!MYALERT]\n> Custom alert content';
+      const output = markdownServicenow.convertMarkdownToServiceNow(input, { customAlerts });
+      expect(output).toContain('.myalert');
+      expect(output).toContain('background-color: #f0f0f0');
+      expect(output).toContain('color: #333333');
+      expect(output).toContain('border-left: 4px solid #666666');
+    });
+
+    it('should allow custom alerts to override built-in alerts', () => {
+      const customNote = {
+        note: {
+          displayName: 'CUSTOM NOTE',
+          emoji: '📓',
+          backgroundColor: '#e8f4fd',
+          textColor: '#1a5276',
+          borderColor: '#3498db'
+        }
+      };
+      const input = '> [!NOTE]\n> Overridden note';
+      const output = markdownServicenow.convertMarkdownToServiceNow(input, {
+        skipCodeTags: true,
+        customAlerts: customNote
+      });
+      expect(output).toContain('📓');
+      expect(output).toContain('CUSTOM NOTE:');
+    });
+
+    it('should generate correct CSS for overridden built-in alert', () => {
+      const customNote = {
+        note: {
+          displayName: 'CUSTOM NOTE',
+          emoji: '📓',
+          backgroundColor: '#e8f4fd',
+          textColor: '#1a5276',
+          borderColor: '#3498db'
+        }
+      };
+      const input = '> [!NOTE]\n> Overridden note';
+      const output = markdownServicenow.convertMarkdownToServiceNow(input, { customAlerts: customNote });
+      expect(output).toContain('background-color: #e8f4fd');
+      expect(output).toContain('color: #1a5276');
+    });
+
+    it('should handle multiple custom alerts', () => {
+      const multipleCustom = {
+        alert1: { displayName: 'ALERT ONE', emoji: '1️⃣', backgroundColor: '#fff', textColor: '#000', borderColor: '#111' },
+        alert2: { displayName: 'ALERT TWO', emoji: '2️⃣', backgroundColor: '#eee', textColor: '#222', borderColor: '#333' }
+      };
+      const input = '> [!ALERT1]\n> First\n\n> [!ALERT2]\n> Second';
+      const output = markdownServicenow.convertMarkdownToServiceNow(input, {
+        skipCodeTags: true,
+        customAlerts: multipleCustom
+      });
+      expect(output).toContain('<p class="alert1">');
+      expect(output).toContain('<p class="alert2">');
+      expect(output).toContain('ALERT ONE:');
+      expect(output).toContain('ALERT TWO:');
+    });
+
+    it('should still convert built-in alerts when custom alerts are provided', () => {
+      const input = '> [!NOTE]\n> Built-in note\n\n> [!MYALERT]\n> Custom alert';
+      const output = markdownServicenow.convertMarkdownToServiceNow(input, {
+        skipCodeTags: true,
+        customAlerts
+      });
+      expect(output).toContain('<p class="note">');
+      expect(output).toContain('<p class="myalert">');
+    });
+
+    it('should handle empty customAlerts object', () => {
+      const input = '> [!NOTE]\n> Regular note';
+      const output = markdownServicenow.convertMarkdownToServiceNow(input, {
+        skipCodeTags: true,
+        customAlerts: {}
+      });
+      expect(output).toContain('<p class="note">');
+      expect(output).toContain('📝');
+    });
+  });
+
+  describe('getBuiltInAlerts function', () => {
+    it('should be exported and callable', () => {
+      expect(markdownServicenow.getBuiltInAlerts).toBeDefined();
+      expect(typeof markdownServicenow.getBuiltInAlerts).toBe('function');
+    });
+
+    it('should return all 10 built-in alerts', () => {
+      const builtIn = markdownServicenow.getBuiltInAlerts();
+      expect(Object.keys(builtIn)).toHaveLength(10);
+      expect(builtIn.status).toBeDefined();
+      expect(builtIn.important).toBeDefined();
+      expect(builtIn.success).toBeDefined();
+      expect(builtIn.note).toBeDefined();
+      expect(builtIn.tip).toBeDefined();
+      expect(builtIn.attention).toBeDefined();
+      expect(builtIn.warning).toBeDefined();
+      expect(builtIn.caution).toBeDefined();
+      expect(builtIn.blocker).toBeDefined();
+      expect(builtIn.question).toBeDefined();
+    });
+
+    it('should return complete alert configurations', () => {
+      const builtIn = markdownServicenow.getBuiltInAlerts();
+      const note = builtIn.note;
+      expect(note.name).toBe('note');
+      expect(note.displayName).toBe('NOTE');
+      expect(note.emoji).toBe('📝');
+      expect(note.backgroundColor).toBe('#eaf2f8');
+      expect(note.textColor).toBe('#325d7a');
+      expect(note.borderColor).toBe('#5b8def');
+    });
+
+    it('should return a copy (not a reference)', () => {
+      const builtIn1 = markdownServicenow.getBuiltInAlerts();
+      const builtIn2 = markdownServicenow.getBuiltInAlerts();
+      builtIn1.note.emoji = 'modified';
+      expect(builtIn2.note.emoji).toBe('📝');
+    });
+  });
 });

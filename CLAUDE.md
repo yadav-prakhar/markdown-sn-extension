@@ -9,7 +9,7 @@ Project instructions for Claude Code when working with this repository.
 2. **Context menu** - Right-click selected text to convert
 3. **In-page buttons** - Convert buttons on ServiceNow journal fields
 
-**Version:** 1.1.3
+**Version:** 2.0.0
 **Library:** markdown-servicenow v1.0.5 (bundled)
 
 ## Quick Reference
@@ -174,6 +174,8 @@ All 10 alert types with their colors:
 | BLOCKER | `> [!BLOCKER]` | `#ede7f6` violet |
 | QUESTION | `> [!QUESTION]` | `#f6f4ea` beige |
 
+> Custom alerts can be created via the popup settings with any name, emoji, and color scheme.
+
 ## Testing
 
 ### Test Structure
@@ -283,13 +285,28 @@ The library protects certain content from text formatting:
 
 ## Common Tasks
 
-### Adding a New Alert Type
+### Adding a New Built-in Alert Type
 
-1. Add CSS rule in `lib/markdown-servicenow.js` → `ALERT_CSS_RULES`
-2. Add emoji in `ALERT_EMOJIS`
-3. Add type to regex in `convertBlockquotes()` function
-4. Add test sample in `tests/fixtures/markdown-samples.js`
-5. Add test cases in `tests/unit/lib/markdown-blockquotes.test.js`
+1. Add alert config to `BUILT_IN_ALERTS` object in `lib/markdown-servicenow.js`:
+   ```javascript
+   NEWALERT: {
+     name: 'NEWALERT',
+     displayName: 'New Alert',
+     emoji: '🔔',
+     textColor: '#333333',
+     backgroundColor: '#f0f0f0',
+     borderColor: '#cccccc'
+   }
+   ```
+2. Add test sample in `tests/fixtures/markdown-samples.js`
+3. Add test cases in `tests/unit/lib/markdown-blockquotes.test.js`
+
+### Custom Alerts (User-Created)
+
+Users can create custom alerts via the popup settings UI. Custom alerts are:
+- Stored in Chrome storage (`chrome.storage.local`)
+- Synced across popup, background worker, and content script
+- Passed to conversion via `options.customAlerts` parameter
 
 ### Adding a New Field Selector
 

@@ -10,6 +10,28 @@
 
   const BUTTON_CLASS = 'md-sn-convert-btn';
   const TOOLBAR_CLASS = 'md-sn-toolbar';
+
+  // Custom alert types state
+  let customAlerts = {};
+
+  // Load custom alerts from storage
+  function loadCustomAlerts() {
+    return new Promise((resolve) => {
+      chrome.storage.local.get(['customAlertTypes'], (result) => {
+        customAlerts = result.customAlertTypes || {};
+        console.log('MD-SN: Loaded custom alerts:', Object.keys(customAlerts).length);
+        resolve();
+      });
+    });
+  }
+
+  // Listen for storage changes
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName === 'local' && changes.customAlertTypes) {
+      customAlerts = changes.customAlertTypes.newValue || {};
+      console.log('MD-SN: Custom alerts updated:', Object.keys(customAlerts).length);
+    }
+  });
   
   // ServiceNow journal field selectors - only journal/activity fields, NOT description
   const JOURNAL_SELECTORS = [
@@ -99,7 +121,7 @@
         return;
       }
 
-      const result = markdownServicenow.convertMarkdownToServiceNow(text);
+      const result = markdownServicenow.convertMarkdownToServiceNow(text, { customAlerts });
       textarea.value = result;
       
       // Trigger events to notify ServiceNow of change
@@ -269,7 +291,7 @@
           return true;
         }
 
-        const converted = markdownServicenow.convertMarkdownToServiceNow(selectedText);
+        const converted = markdownServicenow.convertMarkdownToServiceNow(selectedText, { customAlerts });
 
         if (isTextarea) {
           // Replace selection in textarea/input
@@ -305,7 +327,10 @@
   });
 
   // Initialize
-  function init() {
+  async function init() {
+    // Load custom alerts first
+    await loadCustomAlerts();
+
     // Wait for page to be ready
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => {

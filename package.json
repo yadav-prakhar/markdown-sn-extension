@@ -1,6 +1,6 @@
 {
   "name": "markdown-sn-extension-tests",
-  "version": "1.1.3",
+  "version": "2.0.0",
   "description": "Test suite for Markdown to ServiceNow Chrome Extension",
   "type": "module",
   "private": true,
