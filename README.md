@@ -5,7 +5,7 @@
 
 [Outputs](#output) • [Installation](#installation) • [Usage](#usage) • [Support](#support)
 
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a> &nbsp; <a href="https://github.com/yadav-prakhar/markdown-sn-extension/releases"><img src="https://img.shields.io/badge/version-1.1.1-blue.svg" alt="Version: 1.1.1"></a> &nbsp; <a href="https://www.producthunt.com/products/markdown-to-servicenow?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-markdown-to-servicenow" target="_blank" rel="noopener noreferrer"><img alt="Markdown to ServiceNow - Write Markdown in ServiceNow journal fields | Product Hunt" width="100" height="34" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1051297&amp;theme=light&amp;t=1765978521182"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a> &nbsp; <a href="https://github.com/yadav-prakhar/markdown-sn-extension/releases"><img src="https://img.shields.io/badge/version-1.1.2-blue.svg" alt="Version: 1.1.2"></a> &nbsp; <a href="https://www.producthunt.com/products/markdown-to-servicenow?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-markdown-to-servicenow" target="_blank" rel="noopener noreferrer"><img alt="Markdown to ServiceNow - Write Markdown in ServiceNow journal fields | Product Hunt" width="100" height="34" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1051297&amp;theme=light&amp;t=1765978521182"></a>
 </div>
 
 Convert Markdown to ServiceNow journal field format directly in your browser. Write in Markdown, convert with one click, and paste into ServiceNow.
@@ -82,7 +82,7 @@ Convert Markdown to ServiceNow journal field format directly in your browser. Wr
 | Unordered lists | `- item` or `* item` |
 | Ordered lists | `1. item` |
 | Blockquotes | `> quote` |
-| Alerts | `> [!STATUS]`, `> [!IMPORTANT]`, `> [!SUCCESS]`, `> [!NOTE]`, `> [!TIP]`, `> [!ATTENTION]`, `> [!WARNING]`, `> [!CAUTION]`, `> [!BLOCKER]` |
+| Alerts | `> [!STATUS]`, `> [!IMPORTANT]`, `> [!SUCCESS]`, `> [!NOTE]`, `> [!TIP]`, `> [!ATTENTION]`, `> [!WARNING]`, `> [!CAUTION]`, `> [!BLOCKER]`, `> [!QUESTION]` |
 | Tables | Pipe-delimited tables |
 | Horizontal rules | `---` or `***` |
 
