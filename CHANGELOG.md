@@ -5,6 +5,22 @@ All notable changes to the "Markdown to ServiceNow" extension will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-01-14
+
+### Added
+
+- **Custom Alert Types** - Create your own alert types with custom names, emojis, and colors
+- **Settings Modal** - New settings UI accessible via ⚙️ button in popup
+- **Alert Picker** - Quick-insert buttons for all alert types in popup
+- **Import/Export** - Save and share custom alert configurations as JSON
+- **Chrome Storage Sync** - Custom alerts persist across browser sessions
+
+### Changed
+
+- Refactored alert system from hardcoded to dynamic/extensible architecture
+- Library API now accepts `options.customAlerts` parameter for custom alert support
+- Built-in alerts restructured with full color configuration (background, text, border)
+
 ## [1.1.3] - 2026-01-14
 
 ### Fixed

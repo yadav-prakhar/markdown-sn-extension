@@ -10,18 +10,23 @@
   <div class="container">
     <header>
       <h1>📝 MD → ServiceNow</h1>
+      <button id="settingsBtn" class="settings-btn" title="Custom Alert Types">⚙️</button>
     </header>
     
     <div class="editor-section">
       <div class="panel">
         <label for="input">Markdown Input</label>
-        <textarea 
-          id="input" 
+        <textarea
+          id="input"
           placeholder="Paste your markdown here..."
           spellcheck="false"
         ></textarea>
       </div>
-      
+
+      <div class="alert-picker" id="alertPicker">
+        <!-- Alert badges populated by JS -->
+      </div>
+
       <div class="panel">
         <label for="output">
           ServiceNow Output
@@ -49,6 +54,83 @@
     <div id="toast" class="toast hidden">
       <span class="toast-icon">✓</span>
       <span class="toast-message">Copied to clipboard!</span>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Custom Alert Types</h2>
+          <button id="closeModalBtn" class="close-btn">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="alerts-section">
+            <h3>Built-in Alerts</h3>
+            <div id="builtInAlertsList" class="alerts-list">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <div class="alerts-section">
+            <h3>Custom Alerts</h3>
+            <div id="customAlertsList" class="alerts-list">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <div class="alert-form-section">
+            <h3 id="formTitle">Add New Alert</h3>
+            <form id="alertForm">
+              <input type="hidden" id="editingAlert" value="">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="alertName">Name</label>
+                  <input type="text" id="alertName" placeholder="myalert" pattern="[a-z][a-z0-9_]*" maxlength="20">
+                </div>
+                <div class="form-group">
+                  <label for="alertDisplayName">Display Name</label>
+                  <input type="text" id="alertDisplayName" placeholder="MY ALERT" maxlength="30">
+                </div>
+                <div class="form-group form-group-small">
+                  <label for="alertEmoji">Emoji</label>
+                  <input type="text" id="alertEmoji" placeholder="🎯" maxlength="2">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="alertBgColor">Background</label>
+                  <input type="color" id="alertBgColor" value="#f0f0f0">
+                </div>
+                <div class="form-group">
+                  <label for="alertTextColor">Text</label>
+                  <input type="color" id="alertTextColor" value="#333333">
+                </div>
+                <div class="form-group">
+                  <label for="alertBorderColor">Border</label>
+                  <input type="color" id="alertBorderColor" value="#666666">
+                </div>
+              </div>
+              <div class="preview-section">
+                <label>Preview</label>
+                <div id="alertPreview" class="alert-preview">
+                  <span class="preview-content">🎯 <strong>MY ALERT:</strong> Sample text</span>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" id="saveAlertBtn" class="btn btn-primary btn-small">Add Alert</button>
+                <button type="button" id="cancelEditBtn" class="btn btn-secondary btn-small hidden">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button id="importBtn" class="btn btn-secondary btn-small">📥 Import</button>
+          <button id="exportBtn" class="btn btn-secondary btn-small">📤 Export</button>
+          <input type="file" id="importFile" accept=".json" style="display: none;">
+        </div>
+      </div>
     </div>
   </div>
   

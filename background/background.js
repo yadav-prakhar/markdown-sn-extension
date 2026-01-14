@@ -7,6 +7,25 @@ try {
   console.error('MD-SN Background: Failed to load library:', error);
 }
 
+// Custom alert types state
+let customAlerts = {};
+
+// Load custom alerts from storage
+function loadCustomAlerts() {
+  chrome.storage.local.get(['customAlertTypes'], (result) => {
+    customAlerts = result.customAlertTypes || {};
+    console.log('MD-SN Background: Loaded custom alerts:', Object.keys(customAlerts).length);
+  });
+}
+
+// Listen for storage changes
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === 'local' && changes.customAlertTypes) {
+    customAlerts = changes.customAlertTypes.newValue || {};
+    console.log('MD-SN Background: Custom alerts updated:', Object.keys(customAlerts).length);
+  }
+});
+
 // Create context menu
 function setupContextMenu() {
   console.log('MD-SN Background: Setting up context menu...');
@@ -42,6 +61,9 @@ chrome.runtime.onStartup.addListener(() => {
 // Also create on service worker start
 setupContextMenu();
 
+// Load custom alerts on service worker start
+loadCustomAlerts();
+
 // Handle context menu click
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   console.log('MD-SN Background: Context menu clicked', info.menuItemId);
@@ -68,7 +90,9 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'convert') {
     try {
-      const result = markdownServicenow.convertMarkdownToServiceNow(message.text);
+      // Use custom alerts from message if provided, otherwise use stored customAlerts
+      const alertsToUse = message.customAlerts !== undefined ? message.customAlerts : customAlerts;
+      const result = markdownServicenow.convertMarkdownToServiceNow(message.text, { customAlerts: alertsToUse });
       sendResponse({ success: true, result });
     } catch (error) {
       sendResponse({ success: false, error: error.message });
