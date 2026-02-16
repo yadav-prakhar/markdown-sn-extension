@@ -15,7 +15,7 @@ Thumbs.db
 
 # Store assets (keep locally, don't commit)
 store-assets/
-screenshots/
+# screenshots/
 
 # Testing
 node_modules/
