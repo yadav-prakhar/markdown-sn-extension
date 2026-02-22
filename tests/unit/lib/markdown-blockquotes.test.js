@@ -35,6 +35,81 @@ describe('Blockquotes and Alerts', () => {
     });
   });
 
+  describe('Lists inside blockquotes', () => {
+    it('should convert unordered list items inside a blockquote', () => {
+      const input = '> - Item one\n> - Item two\n> - Item three';
+      const output = convert(input);
+      expect(output).toContain('<blockquote>');
+      expect(output).toContain('<ul>');
+      expect(output).toContain('<li>Item one</li>');
+      expect(output).toContain('<li>Item two</li>');
+      expect(output).toContain('<li>Item three</li>');
+      expect(output).toContain('</ul>');
+    });
+
+    it('should convert ordered list items inside a blockquote', () => {
+      const input = '> 1. First step\n> 2. Second step\n> 3. Third step';
+      const output = convert(input);
+      expect(output).toContain('<blockquote>');
+      expect(output).toContain('<ol>');
+      expect(output).toContain('<li>First step</li>');
+      expect(output).toContain('<li>Second step</li>');
+      expect(output).toContain('<li>Third step</li>');
+      expect(output).toContain('</ol>');
+    });
+
+    it('should handle mixed text and unordered list inside a blockquote', () => {
+      const input = '> Here are the steps:\n> - Do this\n> - Then that';
+      const output = convert(input);
+      expect(output).toContain('<blockquote>');
+      expect(output).toContain('Here are the steps:');
+      expect(output).toContain('<ul>');
+      expect(output).toContain('<li>Do this</li>');
+      expect(output).toContain('<li>Then that</li>');
+    });
+
+    it('should handle mixed text and ordered list inside a blockquote', () => {
+      const input = '> Steps to follow:\n> 1. Step one\n> 2. Step two';
+      const output = convert(input);
+      expect(output).toContain('<blockquote>');
+      expect(output).toContain('Steps to follow:');
+      expect(output).toContain('<ol>');
+      expect(output).toContain('<li>Step one</li>');
+      expect(output).toContain('<li>Step two</li>');
+    });
+
+    it('should convert unordered list items inside an alert block', () => {
+      const input = '> [!NOTE]\n> - Point one\n> - Point two\n> - Point three';
+      const output = convert(input);
+      expect(output).toContain('<p class="note">');
+      expect(output).toContain('<ul>');
+      expect(output).toContain('<li>Point one</li>');
+      expect(output).toContain('<li>Point two</li>');
+      expect(output).toContain('<li>Point three</li>');
+      expect(output).toContain('</ul>');
+    });
+
+    it('should convert ordered list items inside an alert block', () => {
+      const input = '> [!IMPORTANT]\n> 1. First item\n> 2. Second item\n> 3. Third item';
+      const output = convert(input);
+      expect(output).toContain('<p class="important">');
+      expect(output).toContain('<ol>');
+      expect(output).toContain('<li>First item</li>');
+      expect(output).toContain('<li>Second item</li>');
+      expect(output).toContain('<li>Third item</li>');
+      expect(output).toContain('</ol>');
+    });
+
+    it('should handle list items with inline formatting inside blockquote', () => {
+      const input = '> - **Bold item**\n> - *Italic item*';
+      const output = convert(input);
+      expect(output).toContain('<blockquote>');
+      expect(output).toContain('<ul>');
+      expect(output).toContain('<strong>Bold item</strong>');
+      expect(output).toContain('<em>Italic item</em>');
+    });
+  });
+
   describe('Alert blocks - STATUS', () => {
     it('should convert STATUS alert', () => {
       const input = markdownSamples.alertStatus;
