@@ -9,27 +9,27 @@ const convert = (input) => markdownServicenow.convertMarkdownToServiceNow(input,
 
 describe('Blockquotes and Alerts', () => {
   describe('Simple blockquotes', () => {
-    it('should convert simple blockquote to styled paragraph', () => {
+    it('should convert simple blockquote to styled blockquote', () => {
       const input = markdownSamples.blockquote;
       const output = convert(input);
-      expect(output).toContain('<p class="blockquote">');
+      expect(output).toContain('<blockquote class="blockquote">');
       expect(output).toContain('This is a quote');
       expect(output).toContain('spanning multiple lines');
-      expect(output).toContain('</p>');
+      expect(output).toContain('</blockquote>');
     });
 
     it('should convert single line blockquote', () => {
       const input = '> Single line quote';
       const output = convert(input);
-      expect(output).toContain('<p class="blockquote">');
+      expect(output).toContain('<blockquote class="blockquote">');
       expect(output).toContain('Single line quote');
-      expect(output).toContain('</p>');
+      expect(output).toContain('</blockquote>');
     });
 
     it('should handle blockquote with inline formatting', () => {
       const input = '> **Bold** and *italic* quote';
       const output = convert(input);
-      expect(output).toContain('<p class="blockquote">');
+      expect(output).toContain('<blockquote class="blockquote">');
       expect(output).toContain('<strong>Bold</strong>');
       expect(output).toContain('<em>italic</em>');
     });
@@ -52,7 +52,7 @@ describe('Blockquotes and Alerts', () => {
     it('should not add blockquote class to alert blocks', () => {
       const input = '> [!NOTE]\n> A note';
       const output = convert(input);
-      expect(output).not.toContain('<p class="blockquote">');
+      expect(output).not.toContain('<blockquote class="blockquote">');
       expect(output).toContain('<p class="note">');
     });
   });
@@ -306,7 +306,7 @@ describe('Blockquotes and Alerts', () => {
     it('should handle multiline blockquote content', () => {
       const input = '> Line one\n> Line two\n> Line three';
       const output = convert(input);
-      expect(output).toContain('<p class="blockquote">');
+      expect(output).toContain('<blockquote class="blockquote">');
       expect(output).toContain('Line one');
       expect(output).toContain('Line two');
       expect(output).toContain('Line three');
