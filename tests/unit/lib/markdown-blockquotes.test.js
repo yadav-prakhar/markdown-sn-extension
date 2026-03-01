@@ -9,10 +9,10 @@ const convert = (input) => markdownServicenow.convertMarkdownToServiceNow(input,
 
 describe('Blockquotes and Alerts', () => {
   describe('Simple blockquotes', () => {
-    it('should convert simple blockquote', () => {
+    it('should convert simple blockquote to styled blockquote', () => {
       const input = markdownSamples.blockquote;
       const output = convert(input);
-      expect(output).toContain('<blockquote>');
+      expect(output).toContain('<blockquote class="blockquote">');
       expect(output).toContain('This is a quote');
       expect(output).toContain('spanning multiple lines');
       expect(output).toContain('</blockquote>');
@@ -21,7 +21,7 @@ describe('Blockquotes and Alerts', () => {
     it('should convert single line blockquote', () => {
       const input = '> Single line quote';
       const output = convert(input);
-      expect(output).toContain('<blockquote>');
+      expect(output).toContain('<blockquote class="blockquote">');
       expect(output).toContain('Single line quote');
       expect(output).toContain('</blockquote>');
     });
@@ -29,9 +29,31 @@ describe('Blockquotes and Alerts', () => {
     it('should handle blockquote with inline formatting', () => {
       const input = '> **Bold** and *italic* quote';
       const output = convert(input);
-      expect(output).toContain('<blockquote>');
+      expect(output).toContain('<blockquote class="blockquote">');
       expect(output).toContain('<strong>Bold</strong>');
       expect(output).toContain('<em>italic</em>');
+    });
+
+    it('should inject BLOCKQUOTE_CSS when blockquote is present', () => {
+      const input = '> A quote';
+      const output = markdownServicenow.convertMarkdownToServiceNow(input);
+      expect(output).toContain('.blockquote');
+      expect(output).toContain('background-color: #f6f8fa');
+      expect(output).toContain('border-left: 4px solid #57606a');
+      expect(output).toContain('font-size: 110%');
+    });
+
+    it('should NOT inject BLOCKQUOTE_CSS when no blockquote is present', () => {
+      const input = 'Just plain text without any blockquote';
+      const output = markdownServicenow.convertMarkdownToServiceNow(input);
+      expect(output).not.toContain('.blockquote');
+    });
+
+    it('should not add blockquote class to alert blocks', () => {
+      const input = '> [!NOTE]\n> A note';
+      const output = convert(input);
+      expect(output).not.toContain('<blockquote class="blockquote">');
+      expect(output).toContain('<p class="note">');
     });
   });
 
@@ -279,6 +301,15 @@ describe('Blockquotes and Alerts', () => {
       const output = convert(input);
       // Should fall back to blockquote or handle gracefully
       expect(output).toBeDefined();
+    });
+
+    it('should handle multiline blockquote content', () => {
+      const input = '> Line one\n> Line two\n> Line three';
+      const output = convert(input);
+      expect(output).toContain('<blockquote class="blockquote">');
+      expect(output).toContain('Line one');
+      expect(output).toContain('Line two');
+      expect(output).toContain('Line three');
     });
   });
 

@@ -71,7 +71,7 @@ export const expectedOutputs = {
   link: '<a href="https://example.com">Link text</a>',
   unorderedList: '<ul>',
   orderedList: '<ol>',
-  blockquote: '<blockquote>',
+  blockquote: '<p class="blockquote">',
   table: '<table>',
   horizontalRule: '<hr>'
 };
