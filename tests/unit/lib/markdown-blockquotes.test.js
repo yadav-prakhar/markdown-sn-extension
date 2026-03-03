@@ -280,6 +280,60 @@ describe('Blockquotes and Alerts', () => {
     });
   });
 
+  describe('Lists inside blockquotes', () => {
+    it('should convert unordered list inside blockquote', () => {
+      const input = markdownSamples.blockquoteWithUnorderedList;
+      const output = convert(input);
+      expect(output).toContain('<blockquote class="blockquote">');
+      expect(output).toContain('<ul>');
+      expect(output).toContain('Item 1</li>');
+      expect(output).toContain('Item 2</li>');
+      expect(output).toContain('Item 3</li>');
+      expect(output).toContain('</ul>');
+    });
+
+    it('should convert ordered list inside blockquote', () => {
+      const input = markdownSamples.blockquoteWithOrderedList;
+      const output = convert(input);
+      expect(output).toContain('<blockquote class="blockquote">');
+      expect(output).toContain('<ol>');
+      expect(output).toContain('First</li>');
+      expect(output).toContain('Second</li>');
+      expect(output).toContain('Third</li>');
+      expect(output).toContain('</ol>');
+    });
+
+    it('should convert unordered list inside alert block', () => {
+      const input = '> [!NOTE]\n> Key points:\n> - Point A\n> - Point B';
+      const output = convert(input);
+      expect(output).toContain('<p class="note">');
+      expect(output).toContain('<ul>');
+      expect(output).toContain('Point A</li>');
+      expect(output).toContain('Point B</li>');
+    });
+  });
+
+  describe('Tables inside blockquotes', () => {
+    it('should convert table inside blockquote', () => {
+      const input = markdownSamples.blockquoteWithTable;
+      const output = convert(input);
+      expect(output).toContain('<blockquote class="blockquote">');
+      expect(output).toContain('<table');
+      expect(output).toContain('Col 1</th>');
+      expect(output).toContain('A</td>');
+      expect(output).toContain('</table>');
+    });
+
+    it('should convert table inside alert block', () => {
+      const input = '> [!NOTE]\n> | H1 | H2 |\n> |---|---|\n> | V1 | V2 |';
+      const output = convert(input);
+      expect(output).toContain('<p class="note">');
+      expect(output).toContain('<table');
+      expect(output).toContain('H1</th>');
+      expect(output).toContain('V1</td>');
+    });
+  });
+
   describe('Edge cases', () => {
     it('should handle alert without content', () => {
       const input = '> [!NOTE]\n> ';

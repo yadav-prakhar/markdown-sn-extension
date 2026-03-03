@@ -39,6 +39,13 @@ export const markdownSamples = {
   alertStatus: '> [!STATUS]\n> Current status',
   alertQuestion: '> [!QUESTION]\n> Is this working?',
 
+  // Lists inside blockquotes
+  blockquoteWithUnorderedList: '> Some intro text\n> - Item 1\n> - Item 2\n> - Item 3',
+  blockquoteWithOrderedList: '> Steps to follow:\n> 1. First\n> 2. Second\n> 3. Third',
+
+  // Tables inside blockquotes
+  blockquoteWithTable: '> | Col 1 | Col 2 |\n> |-------|-------|\n> | A     | B     |',
+
   // Tables
   table: '| Header 1 | Header 2 |\n|----------|----------|\n| Cell 1   | Cell 2   |\n| Cell 3   | Cell 4   |',
   tableSimple: '| Col 1 | Col 2 |\n|-------|-------|\n| A | B |',
