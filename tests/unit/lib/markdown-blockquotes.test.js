@@ -9,10 +9,10 @@ const convert = (input) => markdownServicenow.convertMarkdownToServiceNow(input,
 
 describe('Blockquotes and Alerts', () => {
   describe('Simple blockquotes', () => {
-    it('should convert simple blockquote', () => {
+    it('should convert simple blockquote to styled blockquote', () => {
       const input = markdownSamples.blockquote;
       const output = convert(input);
-      expect(output).toContain('<blockquote>');
+      expect(output).toContain('<blockquote class="blockquote">');
       expect(output).toContain('This is a quote');
       expect(output).toContain('spanning multiple lines');
       expect(output).toContain('</blockquote>');
@@ -21,7 +21,7 @@ describe('Blockquotes and Alerts', () => {
     it('should convert single line blockquote', () => {
       const input = '> Single line quote';
       const output = convert(input);
-      expect(output).toContain('<blockquote>');
+      expect(output).toContain('<blockquote class="blockquote">');
       expect(output).toContain('Single line quote');
       expect(output).toContain('</blockquote>');
     });
@@ -29,9 +29,31 @@ describe('Blockquotes and Alerts', () => {
     it('should handle blockquote with inline formatting', () => {
       const input = '> **Bold** and *italic* quote';
       const output = convert(input);
-      expect(output).toContain('<blockquote>');
+      expect(output).toContain('<blockquote class="blockquote">');
       expect(output).toContain('<strong>Bold</strong>');
       expect(output).toContain('<em>italic</em>');
+    });
+
+    it('should inject BLOCKQUOTE_CSS when blockquote is present', () => {
+      const input = '> A quote';
+      const output = markdownServicenow.convertMarkdownToServiceNow(input);
+      expect(output).toContain('.blockquote');
+      expect(output).toContain('background-color: #f6f8fa');
+      expect(output).toContain('border-left: 4px solid #57606a');
+      expect(output).toContain('font-size: 110%');
+    });
+
+    it('should NOT inject BLOCKQUOTE_CSS when no blockquote is present', () => {
+      const input = 'Just plain text without any blockquote';
+      const output = markdownServicenow.convertMarkdownToServiceNow(input);
+      expect(output).not.toContain('.blockquote');
+    });
+
+    it('should not add blockquote class to alert blocks', () => {
+      const input = '> [!NOTE]\n> A note';
+      const output = convert(input);
+      expect(output).not.toContain('<blockquote class="blockquote">');
+      expect(output).toContain('<p class="note">');
     });
   });
 
@@ -258,6 +280,60 @@ describe('Blockquotes and Alerts', () => {
     });
   });
 
+  describe('Lists inside blockquotes', () => {
+    it('should convert unordered list inside blockquote', () => {
+      const input = markdownSamples.blockquoteWithUnorderedList;
+      const output = convert(input);
+      expect(output).toContain('<blockquote class="blockquote">');
+      expect(output).toContain('<ul>');
+      expect(output).toContain('Item 1</li>');
+      expect(output).toContain('Item 2</li>');
+      expect(output).toContain('Item 3</li>');
+      expect(output).toContain('</ul>');
+    });
+
+    it('should convert ordered list inside blockquote', () => {
+      const input = markdownSamples.blockquoteWithOrderedList;
+      const output = convert(input);
+      expect(output).toContain('<blockquote class="blockquote">');
+      expect(output).toContain('<ol>');
+      expect(output).toContain('First</li>');
+      expect(output).toContain('Second</li>');
+      expect(output).toContain('Third</li>');
+      expect(output).toContain('</ol>');
+    });
+
+    it('should convert unordered list inside alert block', () => {
+      const input = '> [!NOTE]\n> Key points:\n> - Point A\n> - Point B';
+      const output = convert(input);
+      expect(output).toContain('<p class="note">');
+      expect(output).toContain('<ul>');
+      expect(output).toContain('Point A</li>');
+      expect(output).toContain('Point B</li>');
+    });
+  });
+
+  describe('Tables inside blockquotes', () => {
+    it('should convert table inside blockquote', () => {
+      const input = markdownSamples.blockquoteWithTable;
+      const output = convert(input);
+      expect(output).toContain('<blockquote class="blockquote">');
+      expect(output).toContain('<table');
+      expect(output).toContain('Col 1</th>');
+      expect(output).toContain('A</td>');
+      expect(output).toContain('</table>');
+    });
+
+    it('should convert table inside alert block', () => {
+      const input = '> [!NOTE]\n> | H1 | H2 |\n> |---|---|\n> | V1 | V2 |';
+      const output = convert(input);
+      expect(output).toContain('<p class="note">');
+      expect(output).toContain('<table');
+      expect(output).toContain('H1</th>');
+      expect(output).toContain('V1</td>');
+    });
+  });
+
   describe('Edge cases', () => {
     it('should handle alert without content', () => {
       const input = '> [!NOTE]\n> ';
@@ -279,6 +355,15 @@ describe('Blockquotes and Alerts', () => {
       const output = convert(input);
       // Should fall back to blockquote or handle gracefully
       expect(output).toBeDefined();
+    });
+
+    it('should handle multiline blockquote content', () => {
+      const input = '> Line one\n> Line two\n> Line three';
+      const output = convert(input);
+      expect(output).toContain('<blockquote class="blockquote">');
+      expect(output).toContain('Line one');
+      expect(output).toContain('Line two');
+      expect(output).toContain('Line three');
     });
   });
 
