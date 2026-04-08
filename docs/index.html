@@ -1,0 +1,2019 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Markdown to ServiceNow — Chrome Extension</title>
+  <meta name="description" content="Convert Markdown to ServiceNow journal format instantly. Features popup converter, right-click context menu, in-page toolbar, live preview, custom alerts, and snippets manager." />
+  <!-- Open Graph -->
+  <meta property="og:title" content="Markdown to ServiceNow — Chrome Extension" />
+  <meta property="og:description" content="Write in Markdown, post to ServiceNow. A Chrome extension with popup converter, context menu, in-page toolbar, live preview, and custom alerts." />
+  <meta property="og:type" content="website" />
+  <!-- TODO(user): Update og:url once GitHub Pages is live -->
+  <meta property="og:url" content="https://yadav-prakhar.github.io/markdown-sn-extension/" />
+  <!-- TODO(user): Create a social preview image (1200x630px) and update this path -->
+  <!-- <meta property="og:image" content="https://yadav-prakhar.github.io/markdown-sn-extension/social-preview.png" /> -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/png" href="icons/Icon128.png" />
+  <link rel="icon" type="image/svg+xml" href="icons/Icon.svg" />
+
+  <style>
+    /* ============================================================
+       DESIGN SYSTEM — CSS Custom Properties
+       ============================================================ */
+    :root {
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', Consolas, monospace;
+
+      /* Spacing */
+      --space-xs: 0.25rem;
+      --space-sm: 0.5rem;
+      --space-md: 1rem;
+      --space-lg: 1.5rem;
+      --space-xl: 2rem;
+      --space-2xl: 3rem;
+      --space-3xl: 5rem;
+
+      /* Radius */
+      --radius-sm: 4px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --radius-full: 9999px;
+
+      /* Transitions */
+      --transition: 0.2s ease;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-tertiary: #1f2937;
+      --surface: #21262d;
+      --surface-hover: #30363d;
+      --border: #30363d;
+      --border-muted: #21262d;
+      --text: #e6edf3;
+      --text-secondary: #8b949e;
+      --text-muted: #6e7681;
+      --accent: #58a6ff;
+      --accent-hover: #79b8ff;
+      --accent-purple: #bc8cff;
+      --accent-teal: #3fb950;
+      --accent-orange: #f0883e;
+      --gradient: linear-gradient(135deg, #8250df 0%, #388bfd 50%, #1f6feb 100%);
+      --gradient-subtle: linear-gradient(135deg, rgba(130,80,223,0.15) 0%, rgba(56,139,253,0.15) 100%);
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+      --shadow-lg: 0 8px 48px rgba(0,0,0,0.6);
+      --code-bg: #161b22;
+      --overlay: rgba(0,0,0,0.85);
+    }
+
+    [data-theme="light"] {
+      --bg: #ffffff;
+      --bg-secondary: #f6f8fa;
+      --bg-tertiary: #f0f2f5;
+      --surface: #ffffff;
+      --surface-hover: #f0f2f5;
+      --border: #d0d7de;
+      --border-muted: #e8eaed;
+      --text: #24292f;
+      --text-secondary: #57606a;
+      --text-muted: #8c959f;
+      --accent: #0969da;
+      --accent-hover: #0550ae;
+      --accent-purple: #8250df;
+      --accent-teal: #1a7f37;
+      --accent-orange: #bc4c00;
+      --gradient: linear-gradient(135deg, #8250df 0%, #0969da 50%, #1a7f37 100%);
+      --gradient-subtle: linear-gradient(135deg, rgba(130,80,223,0.08) 0%, rgba(9,105,218,0.08) 100%);
+      --shadow: 0 4px 16px rgba(0,0,0,0.08);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+      --code-bg: #f6f8fa;
+      --overlay: rgba(0,0,0,0.6);
+    }
+
+    /* ============================================================
+       RESET & BASE
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; font-size: 16px; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      transition: background var(--transition), color var(--transition);
+      overflow-x: hidden;
+    }
+
+    img { max-width: 100%; height: auto; display: block; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: var(--accent-hover); text-decoration: underline; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.875em;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.1em 0.4em;
+    }
+    pre {
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    pre code { background: none; border: none; padding: 0; font-size: inherit; }
+
+    /* ============================================================
+       LAYOUT UTILITIES
+       ============================================================ */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 var(--space-xl);
+    }
+    .section {
+      padding: var(--space-3xl) 0;
+    }
+    .section + .section {
+      border-top: 1px solid var(--border-muted);
+    }
+    .section-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      margin-bottom: var(--space-sm);
+    }
+    .section-title {
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: var(--space-md);
+      letter-spacing: -0.02em;
+    }
+    .section-subtitle {
+      font-size: 1.125rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin-bottom: var(--space-2xl);
+    }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-xl); }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-lg); }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-md); }
+
+    /* ============================================================
+       NAVIGATION
+       ============================================================ */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xl);
+      height: 60px;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text);
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .nav-logo img { width: 24px; height: 24px; border-radius: var(--radius-sm); }
+    .nav-logo:hover { text-decoration: none; color: var(--accent); }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: var(--space-lg);
+      list-style: none;
+      flex: 1;
+    }
+    .nav-links a {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color var(--transition);
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      flex-shrink: 0;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-full);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition);
+      border: none;
+      text-decoration: none;
+      font-family: var(--font);
+    }
+    .btn-primary {
+      background: var(--gradient);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+      text-decoration: none;
+      color: #fff;
+    }
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover {
+      background: var(--surface-hover);
+      text-decoration: none;
+      color: var(--text);
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      padding: 0.5rem;
+      border-radius: var(--radius-md);
+    }
+    .btn-ghost:hover { background: var(--surface-hover); color: var(--text); text-decoration: none; }
+    .btn-lg {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border-radius: var(--radius-full);
+    }
+    .theme-toggle { font-size: 1.1rem; line-height: 1; }
+    .hamburger { display: none; flex-direction: column; gap: 4px; cursor: pointer; padding: 6px; }
+    .hamburger span { display: block; width: 20px; height: 2px; background: var(--text); border-radius: 2px; transition: all var(--transition); }
+
+    /* ============================================================
+       HERO
+       ============================================================ */
+    .hero {
+      padding: var(--space-3xl) 0 var(--space-2xl);
+      text-align: center;
+      background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(130,80,223,0.15) 0%, transparent 70%);
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      padding: 0.35rem 0.75rem;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-lg);
+    }
+    .hero-badge-dot {
+      width: 6px; height: 6px;
+      background: var(--accent-teal);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.8); }
+    }
+    .hero-icon {
+      width: 80px; height: 80px;
+      border-radius: var(--radius-xl);
+      margin: 0 auto var(--space-lg);
+      box-shadow: 0 0 0 1px var(--border), var(--shadow);
+    }
+    .hero-title {
+      font-size: clamp(2.5rem, 7vw, 4rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: var(--space-lg);
+    }
+    .hero-title .gradient-text {
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-subtitle {
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+      max-width: 560px;
+      margin: 0 auto var(--space-xl);
+      line-height: 1.7;
+    }
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-md);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-xl);
+    }
+    .hero-shortcut {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: var(--space-2xl);
+    }
+    .kbd {
+      display: inline-flex;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-bottom-width: 2px;
+      border-radius: var(--radius-sm);
+      padding: 0.1rem 0.4rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-2xl);
+      flex-wrap: wrap;
+    }
+    .hero-stat { text-align: center; }
+    .hero-stat-value {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1;
+    }
+    .hero-stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: var(--space-xs);
+    }
+
+    /* ============================================================
+       FEATURES GRID
+       ============================================================ */
+    .feature-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      transition: all var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--gradient);
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+    .feature-card:hover {
+      border-color: var(--surface-hover);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-icon {
+      font-size: 2rem;
+      margin-bottom: var(--space-md);
+      display: block;
+    }
+    .feature-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: var(--space-sm);
+      color: var(--text);
+    }
+    .feature-desc {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .feature-tag {
+      display: inline-block;
+      background: rgba(130,80,223,0.15);
+      color: var(--accent-purple);
+      border-radius: var(--radius-full);
+      padding: 0.15rem 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-top: var(--space-sm);
+    }
+
+    /* ============================================================
+       SCREENSHOTS
+       ============================================================ */
+    .screenshots-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-lg);
+    }
+    .screenshot-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      cursor: pointer;
+      transition: all var(--transition);
+      background: var(--bg-secondary);
+    }
+    .screenshot-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+    }
+    .screenshot-card img {
+      width: 100%;
+      aspect-ratio: 16/10;
+      object-fit: cover;
+      object-position: top;
+    }
+    .screenshot-caption {
+      padding: var(--space-md);
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      text-align: center;
+      border-top: 1px solid var(--border-muted);
+    }
+
+    /* Lightbox */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--overlay);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-xl);
+    }
+    .lightbox.active { display: flex; }
+    .lightbox-img {
+      max-width: 90vw;
+      max-height: 85vh;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      object-fit: contain;
+    }
+    .lightbox-close {
+      position: fixed;
+      top: var(--space-lg);
+      right: var(--space-lg);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      font-size: 1.2rem;
+      color: var(--text);
+      transition: all var(--transition);
+    }
+    .lightbox-close:hover { background: var(--surface-hover); }
+
+    /* ============================================================
+       LIVE DEMO
+       ============================================================ */
+    .demo-wrapper {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+    }
+    .demo-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem var(--space-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+    .demo-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+    }
+    .demo-title {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .demo-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 320px;
+    }
+    .demo-panel {
+      display: flex;
+      flex-direction: column;
+    }
+    .demo-panel + .demo-panel {
+      border-left: 1px solid var(--border);
+    }
+    .demo-panel-label {
+      padding: 0.5rem var(--space-lg);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-muted);
+      background: var(--bg-secondary);
+    }
+    .demo-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      padding: var(--space-lg);
+      resize: none;
+      line-height: 1.6;
+    }
+    .demo-output {
+      flex: 1;
+      padding: var(--space-lg);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      line-height: 1.6;
+    }
+    .demo-footer {
+      padding: 0.75rem var(--space-lg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .demo-preset-btns {
+      display: flex;
+      gap: var(--space-sm);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-md);
+    }
+    .demo-preset-btn {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      padding: 0.25rem 0.75rem;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition);
+      font-family: var(--font);
+    }
+    .demo-preset-btn:hover { background: var(--surface-hover); color: var(--text); border-color: var(--accent); }
+    .demo-preset-btn.active { background: var(--gradient-subtle); color: var(--accent); border-color: var(--accent); }
+
+    /* ============================================================
+       ALERT TYPES
+       ============================================================ */
+    .alerts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: var(--space-md);
+    }
+    .alert-card {
+      border-radius: var(--radius-md);
+      padding: var(--space-md) var(--space-lg);
+      border-left: 4px solid;
+      cursor: default;
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+    .alert-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+    .alert-card-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      font-weight: 700;
+      font-size: 0.875rem;
+      margin-bottom: var(--space-xs);
+    }
+    .alert-card-syntax {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      opacity: 0.7;
+      margin-bottom: var(--space-sm);
+    }
+    .alert-card-desc {
+      font-size: 0.8rem;
+      opacity: 0.85;
+      line-height: 1.4;
+    }
+
+    /* ============================================================
+       SYNTAX REFERENCE TABLE
+       ============================================================ */
+    .syntax-table-wrapper {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+    }
+    .syntax-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    .syntax-table th {
+      background: var(--bg-secondary);
+      padding: 0.75rem 1.25rem;
+      text-align: left;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .syntax-table td {
+      padding: 0.75rem 1.25rem;
+      border-bottom: 1px solid var(--border-muted);
+      color: var(--text-secondary);
+    }
+    .syntax-table tr:last-child td { border-bottom: none; }
+    .syntax-table tr:hover td { background: var(--bg-secondary); }
+    .syntax-table td:first-child { color: var(--text); font-weight: 500; }
+    .syntax-table td:nth-child(2) code { color: var(--accent-purple); }
+
+    /* ============================================================
+       ADVANCED FEATURES
+       ============================================================ */
+    .advanced-feature {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3xl);
+      align-items: center;
+      padding: var(--space-2xl) 0;
+    }
+    .advanced-feature + .advanced-feature {
+      border-top: 1px solid var(--border-muted);
+    }
+    .advanced-feature.reverse { direction: rtl; }
+    .advanced-feature.reverse > * { direction: ltr; }
+    .advanced-feature-content { }
+    .advanced-feature-visual {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-xl);
+      font-size: 0.875rem;
+    }
+    .advanced-feature-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: var(--space-md);
+    }
+    .advanced-feature-desc {
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: var(--space-lg);
+    }
+    .feature-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+    .feature-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-sm);
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+    .feature-list li::before {
+      content: '✓';
+      color: var(--accent-teal);
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* Mock UI components */
+    .mock-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-sm);
+      width: fit-content;
+    }
+    .mock-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 4px 8px;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      cursor: default;
+      white-space: nowrap;
+    }
+    .mock-btn.active { background: var(--gradient-subtle); border-color: var(--accent); color: var(--accent); }
+    .mock-textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      min-height: 80px;
+      resize: none;
+    }
+
+    .mock-alert-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm);
+      border-radius: var(--radius-md);
+      font-size: 0.8rem;
+      margin-bottom: var(--space-xs);
+    }
+    .mock-preview-panes {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-sm);
+    }
+    .mock-pane {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: var(--space-sm);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      min-height: 80px;
+    }
+    .mock-pane-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: var(--space-xs);
+    }
+    .mock-snippet-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-sm);
+      border: 1px solid var(--border-muted);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-xs);
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+    .mock-snippet-actions { display: flex; gap: 4px; }
+    .mock-mini-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 2px 6px;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      cursor: default;
+    }
+
+    /* ============================================================
+       HOW TO USE / STEPS
+       ============================================================ */
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+    }
+    .step {
+      display: flex;
+      gap: var(--space-lg);
+      align-items: flex-start;
+    }
+    .step-num {
+      flex-shrink: 0;
+      width: 36px; height: 36px;
+      background: var(--gradient);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800;
+      font-size: 0.875rem;
+      color: #fff;
+    }
+    .step-content { padding-top: 6px; }
+    .step-title { font-weight: 700; margin-bottom: var(--space-xs); }
+    .step-desc { font-size: 0.9rem; color: var(--text-secondary); }
+
+    /* ============================================================
+       PRIVACY
+       ============================================================ */
+    .privacy-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-lg);
+    }
+    .privacy-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      text-align: center;
+    }
+    .privacy-icon { font-size: 2.5rem; margin-bottom: var(--space-md); display: block; }
+    .privacy-title { font-weight: 700; margin-bottom: var(--space-sm); }
+    .privacy-desc { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.6; }
+
+    /* ============================================================
+       FAQ ACCORDION
+       ============================================================ */
+    .faq-list { display: flex; flex-direction: column; gap: var(--space-sm); }
+    .faq-item {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .faq-question {
+      width: 100%;
+      background: none;
+      border: none;
+      padding: var(--space-lg) var(--space-xl);
+      text-align: left;
+      font-family: var(--font);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--space-md);
+      transition: background var(--transition);
+    }
+    .faq-question:hover { background: var(--surface-hover); }
+    .faq-question .faq-icon {
+      flex-shrink: 0;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      transition: transform var(--transition);
+    }
+    .faq-item.open .faq-icon { transform: rotate(180deg); }
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .faq-item.open .faq-answer { max-height: 400px; }
+    .faq-answer-inner {
+      padding: 0 var(--space-xl) var(--space-lg);
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      border-top: 1px solid var(--border-muted);
+      padding-top: var(--space-md);
+    }
+
+    /* ============================================================
+       PLACEHOLDER / TODO CALLOUT
+       ============================================================ */
+    .todo-callout {
+      background: rgba(240, 136, 62, 0.1);
+      border: 1px dashed var(--accent-orange);
+      border-radius: var(--radius-md);
+      padding: var(--space-md) var(--space-lg);
+      font-size: 0.875rem;
+      color: var(--accent-orange);
+      margin: var(--space-md) 0;
+      display: flex;
+      gap: var(--space-sm);
+      align-items: flex-start;
+    }
+    .todo-callout::before { content: '📋'; flex-shrink: 0; }
+
+    /* ============================================================
+       FOOTER
+       ============================================================ */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: var(--space-2xl) 0;
+      margin-top: var(--space-3xl);
+    }
+    .footer-inner {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: var(--space-2xl);
+      margin-bottom: var(--space-xl);
+    }
+    .footer-brand-name {
+      font-weight: 700;
+      margin-bottom: var(--space-sm);
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+    .footer-brand-name img { width: 20px; height: 20px; border-radius: var(--radius-sm); }
+    .footer-brand-desc { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.6; }
+    .footer-col-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: var(--space-md);
+    }
+    .footer-links { list-style: none; display: flex; flex-direction: column; gap: var(--space-sm); }
+    .footer-links a { font-size: 0.875rem; color: var(--text-secondary); }
+    .footer-links a:hover { color: var(--text); }
+    .footer-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: var(--space-xl);
+      border-top: 1px solid var(--border-muted);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+      gap: var(--space-md);
+    }
+    .version-badge {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      padding: 0.2rem 0.6rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* ============================================================
+       RESPONSIVE
+       ============================================================ */
+    @media (max-width: 900px) {
+      .grid-3 { grid-template-columns: repeat(2, 1fr); }
+      .grid-4 { grid-template-columns: repeat(2, 1fr); }
+      .screenshots-grid { grid-template-columns: repeat(2, 1fr); }
+      .advanced-feature { grid-template-columns: 1fr; gap: var(--space-xl); }
+      .advanced-feature.reverse { direction: ltr; }
+      .footer-inner { grid-template-columns: 1fr 1fr; }
+      .privacy-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .container { padding: 0 var(--space-lg); }
+      .nav-links { display: none; }
+      .nav-links.open {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 60px; left: 0; right: 0;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        padding: var(--space-lg) var(--space-xl);
+        z-index: 99;
+        gap: var(--space-lg);
+      }
+      .hamburger { display: flex; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .grid-3 { grid-template-columns: 1fr; }
+      .grid-4 { grid-template-columns: 1fr 1fr; }
+      .screenshots-grid { grid-template-columns: 1fr; }
+      .privacy-grid { grid-template-columns: 1fr; }
+      .demo-body { grid-template-columns: 1fr; }
+      .demo-panel + .demo-panel { border-left: none; border-top: 1px solid var(--border); }
+      .footer-inner { grid-template-columns: 1fr; gap: var(--space-xl); }
+      .footer-bottom { flex-direction: column; align-items: flex-start; }
+      .hero-stats { gap: var(--space-xl); }
+      .mock-preview-panes { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ================================================================
+     NAVIGATION
+     ================================================================ -->
+<nav class="nav">
+  <div class="container">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <img src="icons/Icon128.png" alt="Extension icon" />
+        MD → SN
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#demo">Live Demo</a></li>
+        <li><a href="#alerts">Alerts</a></li>
+        <li><a href="#syntax">Syntax</a></li>
+        <li><a href="#how-to-use">Get Started</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button class="btn btn-ghost theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle dark/light mode">🌙</button>
+        <!-- TODO(user): Replace href with actual Chrome Web Store URL after publishing -->
+        <a href="#install" class="btn btn-primary" id="navCta">
+          ⬇ Install Free
+        </a>
+        <button class="btn btn-ghost hamburger" id="hamburger" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ================================================================
+     HERO
+     ================================================================ -->
+<section class="hero" id="hero">
+  <div class="container">
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      Version 3.0.0 · Free Chrome Extension
+    </div>
+    <img src="icons/Icon128.png" alt="Markdown to ServiceNow icon" class="hero-icon" />
+    <h1 class="hero-title">
+      Write Markdown,<br/>
+      <span class="gradient-text">Post to ServiceNow</span>
+    </h1>
+    <p class="hero-subtitle">
+      A Chrome extension that converts Markdown to ServiceNow journal format instantly —
+      with a popup converter, right-click context menu, and in-page toolbar on every journal field.
+    </p>
+    <div class="hero-actions">
+      <!-- TODO(user): Replace with actual Chrome Web Store URL after publishing -->
+      <a href="#install" class="btn btn-primary btn-lg" id="heroInstallBtn">
+        🛒 Add to Chrome — It's Free
+      </a>
+      <a href="https://github.com/yadav-prakhar/markdown-sn-extension" target="_blank" rel="noopener" class="btn btn-secondary btn-lg">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        View on GitHub
+      </a>
+    </div>
+    <div class="hero-shortcut">
+      <span>Open popup with</span>
+      <kbd class="kbd">⌘</kbd><kbd class="kbd">Shift</kbd><kbd class="kbd">M</kbd>
+      <span>on Mac or</span>
+      <kbd class="kbd">Ctrl</kbd><kbd class="kbd">Shift</kbd><kbd class="kbd">M</kbd>
+      <span>on Windows</span>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-value">3</div>
+        <div class="hero-stat-label">Conversion Methods</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">10+</div>
+        <div class="hero-stat-label">Alert Types</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">0</div>
+        <div class="hero-stat-label">Data Collected</div>
+      </div>
+      <!-- TODO(user): Update install count once published to Chrome Web Store -->
+      <div class="hero-stat">
+        <div class="hero-stat-value" id="installCount">—</div>
+        <div class="hero-stat-label">Active Users</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     FEATURES
+     ================================================================ -->
+<section class="section" id="features">
+  <div class="container">
+    <div class="section-label">Features</div>
+    <h2 class="section-title">Everything you need for ServiceNow</h2>
+    <p class="section-subtitle">Three ways to convert, with powerful extras for power users.</p>
+    <div class="grid-3">
+      <div class="feature-card">
+        <span class="feature-icon">📝</span>
+        <div class="feature-title">Popup Converter</div>
+        <div class="feature-desc">Click the extension icon to open a full converter. Paste Markdown, see the ServiceNow output instantly, and copy with one click.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🖱️</span>
+        <div class="feature-title">Context Menu</div>
+        <div class="feature-desc">Select any Markdown text on a page, right-click, and choose "Convert Markdown to ServiceNow" — it copies to clipboard automatically.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">⚡</span>
+        <div class="feature-title">In-Page Toolbar</div>
+        <div class="feature-desc">A floating toolbar appears on every ServiceNow journal field. Convert in-place, preview before applying, and restore if needed.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">👁</span>
+        <div class="feature-title">Live Preview</div>
+        <div class="feature-desc">Side-by-side preview modal shows how your Markdown will render before committing the change to the field.</div>
+        <span class="feature-tag">v3.0.0 New</span>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🎨</span>
+        <div class="feature-title">Custom Alerts</div>
+        <div class="feature-desc">Create your own alert types with custom emojis, colors, and names. Import/export your config to share with teammates.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📌</span>
+        <div class="feature-title">Snippets Manager</div>
+        <div class="feature-desc">Save reusable Markdown blocks and insert them with a click. Great for standard response templates and boilerplate.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">↩️</span>
+        <div class="feature-title">Undo / Restore</div>
+        <div class="feature-desc">After converting, a restore button appears per field. Changed your mind? One click reverts to the original Markdown.</div>
+        <span class="feature-tag">v3.0.0 New</span>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">?</span>
+        <div class="feature-title">Cheatsheet</div>
+        <div class="feature-desc">Built-in Markdown syntax reference, accessible from the toolbar. Click any item to insert the syntax at your cursor.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🔒</span>
+        <div class="feature-title">100% Private</div>
+        <div class="feature-desc">No data is ever collected, transmitted, or stored externally. Everything runs locally in your browser. Fully open source.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     SCREENSHOTS
+     ================================================================ -->
+<section class="section" id="screenshots">
+  <div class="container">
+    <div class="section-label">Screenshots</div>
+    <h2 class="section-title">See it in action</h2>
+    <p class="section-subtitle">Click any screenshot to enlarge.</p>
+    <div class="screenshots-grid">
+      <div class="screenshot-card" onclick="openLightbox('screenshots/ss1.png', 'Popup Converter Interface')">
+        <img src="screenshots/ss1.png" alt="Popup converter interface" loading="lazy" />
+        <div class="screenshot-caption">📝 Popup Converter</div>
+      </div>
+      <div class="screenshot-card" onclick="openLightbox('screenshots/ss2.png', 'Markdown Conversion Example')">
+        <img src="screenshots/ss2.png" alt="Markdown conversion example" loading="lazy" />
+        <div class="screenshot-caption">⚡ Conversion in Action</div>
+      </div>
+      <div class="screenshot-card" onclick="openLightbox('screenshots/ssAlerts.png', 'Alert Types Showcase')">
+        <img src="screenshots/ssAlerts.png" alt="Alert types showcase" loading="lazy" />
+        <div class="screenshot-caption">🎨 Alert Types</div>
+      </div>
+    </div>
+    <!-- TODO(user): Add screenshots of the in-page toolbar on a ServiceNow page, the preview modal, and the settings modal. Suggested filenames: ss-toolbar.png, ss-preview.png, ss-settings.png. Place them in docs/screenshots/ and add screenshot-card entries here. -->
+    <div class="todo-callout">
+      <div><strong>TODO (user):</strong> Additional screenshots needed — in-page toolbar on ServiceNow (ss-toolbar.png), preview modal (ss-preview.png), and custom alerts settings (ss-settings.png). Place in <code>docs/screenshots/</code> and add screenshot cards above.</div>
+    </div>
+  </div>
+</section>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img class="lightbox-img" id="lightboxImg" src="" alt="" />
+</div>
+
+<!-- ================================================================
+     LIVE DEMO
+     ================================================================ -->
+<section class="section" id="demo">
+  <div class="container">
+    <div class="section-label">Live Demo</div>
+    <h2 class="section-title">Try it right here</h2>
+    <p class="section-subtitle">Type Markdown in the left panel and see the ServiceNow journal output on the right — powered by the actual conversion library.</p>
+
+    <div class="demo-preset-btns">
+      <button class="demo-preset-btn active" onclick="loadPreset('basic')" id="preset-basic">Basic Formatting</button>
+      <button class="demo-preset-btn" onclick="loadPreset('alert')" id="preset-alert">Alert Blocks</button>
+      <button class="demo-preset-btn" onclick="loadPreset('table')" id="preset-table">Tables</button>
+      <button class="demo-preset-btn" onclick="loadPreset('code')" id="preset-code">Code Blocks</button>
+      <button class="demo-preset-btn" onclick="loadPreset('full')" id="preset-full">Full Example</button>
+    </div>
+
+    <div class="demo-wrapper">
+      <div class="demo-header">
+        <span class="demo-dot" style="background:#ff5f57"></span>
+        <span class="demo-dot" style="background:#ffbd2e"></span>
+        <span class="demo-dot" style="background:#28ca42"></span>
+        <span class="demo-title">Markdown → ServiceNow Journal Format</span>
+      </div>
+      <div class="demo-body">
+        <div class="demo-panel">
+          <div class="demo-panel-label">✏️ Markdown Input</div>
+          <textarea class="demo-input" id="demoInput" spellcheck="false" aria-label="Markdown input"></textarea>
+        </div>
+        <div class="demo-panel">
+          <div class="demo-panel-label">⬡ ServiceNow Output</div>
+          <pre class="demo-output" id="demoOutput" aria-label="ServiceNow output"></pre>
+        </div>
+      </div>
+      <div class="demo-footer">
+        <span id="demoCharCount">0 characters</span>
+        <span>Output is the raw ServiceNow journal format (as pasted into a journal field)</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     ALERT TYPES
+     ================================================================ -->
+<section class="section" id="alerts">
+  <div class="container">
+    <div class="section-label">Alert Types</div>
+    <h2 class="section-title">10 built-in alert styles</h2>
+    <p class="section-subtitle">Use the <code>&gt; [!TYPE]</code> syntax in your Markdown. Each alert renders with a distinct color in ServiceNow.</p>
+    <div class="alerts-grid" id="alertsGrid">
+      <!-- Populated by JavaScript -->
+    </div>
+    <div style="margin-top: var(--space-xl); padding: var(--space-lg); background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-lg);">
+      <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: var(--space-sm);">
+        <strong>Example syntax:</strong>
+      </p>
+      <pre><code>&gt; [!WARNING]
+&gt; This deployment will cause a brief service interruption.
+&gt; Estimated downtime: 5 minutes.</code></pre>
+    </div>
+    <div style="margin-top: var(--space-lg); padding: var(--space-lg); background: var(--gradient-subtle); border: 1px solid var(--border); border-radius: var(--radius-lg);">
+      <strong style="display: block; margin-bottom: var(--space-sm);">✨ Plus: Unlimited custom alerts</strong>
+      <p style="font-size: 0.875rem; color: var(--text-secondary);">Create your own alert types with any name, emoji, and color scheme via the extension settings. Import and export configurations to share with your team.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     SYNTAX REFERENCE
+     ================================================================ -->
+<section class="section" id="syntax">
+  <div class="container">
+    <div class="section-label">Syntax Reference</div>
+    <h2 class="section-title">Supported Markdown</h2>
+    <p class="section-subtitle">All standard Markdown elements plus ServiceNow-specific extensions.</p>
+    <div class="syntax-table-wrapper">
+      <table class="syntax-table">
+        <thead>
+          <tr>
+            <th>Element</th>
+            <th>Markdown Syntax</th>
+            <th>ServiceNow Output</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Heading 1</td><td><code># Heading</code></td><td><code>&lt;h1&gt;Heading&lt;/h1&gt;</code></td><td>H1 through H6 supported</td></tr>
+          <tr><td>Bold</td><td><code>**text**</code> or <code>__text__</code></td><td><code>&lt;strong&gt;text&lt;/strong&gt;</code></td><td></td></tr>
+          <tr><td>Italic</td><td><code>*text*</code> or <code>_text_</code></td><td><code>&lt;em&gt;text&lt;/em&gt;</code></td><td></td></tr>
+          <tr><td>Bold + Italic</td><td><code>***text***</code></td><td><code>&lt;strong&gt;&lt;em&gt;text&lt;/em&gt;&lt;/strong&gt;</code></td><td></td></tr>
+          <tr><td>Strikethrough</td><td><code>~~text~~</code></td><td><code>&lt;strike&gt;text&lt;/strike&gt;</code></td><td></td></tr>
+          <tr><td>Highlight</td><td><code>==text==</code></td><td><code>&lt;span&gt;text&lt;/span&gt;</code></td><td>Yellow background</td></tr>
+          <tr><td>Inline Code</td><td><code>`code`</code></td><td><code>&lt;code&gt;code&lt;/code&gt;</code></td><td></td></tr>
+          <tr><td>Code Block</td><td><code>```language</code></td><td><code>[code]...[/code]</code></td><td>ServiceNow code tag</td></tr>
+          <tr><td>Link</td><td><code>[text](url)</code></td><td><code>&lt;a href="url"&gt;text&lt;/a&gt;</code></td><td></td></tr>
+          <tr><td>Image</td><td><code>![alt](url)</code></td><td><code>&lt;img src="url" alt="alt"&gt;</code></td><td></td></tr>
+          <tr><td>Unordered List</td><td><code>- item</code> or <code>* item</code></td><td><code>&lt;ul&gt;&lt;li&gt;item&lt;/li&gt;&lt;/ul&gt;</code></td><td></td></tr>
+          <tr><td>Ordered List</td><td><code>1. item</code></td><td><code>&lt;ol&gt;&lt;li&gt;item&lt;/li&gt;&lt;/ol&gt;</code></td><td></td></tr>
+          <tr><td>Blockquote</td><td><code>&gt; quote</code></td><td><code>&lt;blockquote&gt;...&lt;/blockquote&gt;</code></td><td>With border + background</td></tr>
+          <tr><td>Alert Block</td><td><code>&gt; [!WARNING]</code></td><td>Styled blockquote</td><td>10 built-in types</td></tr>
+          <tr><td>Table</td><td>Pipe-delimited</td><td><code>&lt;table&gt;...&lt;/table&gt;</code></td><td>With header styling</td></tr>
+          <tr><td>Horizontal Rule</td><td><code>---</code> or <code>***</code></td><td><code>&lt;hr&gt;</code></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     ADVANCED FEATURES
+     ================================================================ -->
+<section class="section" id="advanced">
+  <div class="container">
+    <div class="section-label">Advanced Features</div>
+    <h2 class="section-title">Built for power users</h2>
+
+    <!-- Live Preview -->
+    <div class="advanced-feature">
+      <div class="advanced-feature-content">
+        <div class="advanced-feature-title">👁 Side-by-Side Preview</div>
+        <div class="advanced-feature-desc">
+          Before committing a conversion, preview exactly how it will render in ServiceNow. A floating modal shows your Markdown and the output side-by-side — click Apply to convert, or Cancel to keep editing.
+        </div>
+        <ul class="feature-list">
+          <li>Live updates as you type in the preview</li>
+          <li>Debounced rendering for smooth performance</li>
+          <li>XSS-safe: strips event handlers and javascript: URIs</li>
+          <li>Apply or cancel without losing your original text</li>
+        </ul>
+      </div>
+      <div class="advanced-feature-visual">
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: var(--space-sm);">📝 Preview Modal</div>
+        <div class="mock-preview-panes">
+          <div class="mock-pane">
+            <div class="mock-pane-label">Markdown</div>
+            <div style="color: var(--text-secondary);">## Status Update<br/>Everything is **on track**.<br/>&gt; [!SUCCESS]<br/>&gt; Tests passing.</div>
+          </div>
+          <div class="mock-pane">
+            <div class="mock-pane-label">Preview</div>
+            <div style="color: var(--text-secondary);">
+              <div style="font-weight:700; font-size:1rem; margin-bottom:4px;">Status Update</div>
+              <div>Everything is <strong>on track</strong>.</div>
+              <div style="background:#e0f2f1; border-left:3px solid #2aa198; padding:4px 8px; margin-top:4px; font-size:0.75rem; border-radius:3px;">✅ SUCCESS: Tests passing.</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top: var(--space-md);">
+          <span class="mock-mini-btn">Cancel</span>
+          <span class="mock-mini-btn" style="background: var(--gradient-subtle); border-color: var(--accent); color: var(--accent);">Apply ✓</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Alerts -->
+    <div class="advanced-feature reverse">
+      <div class="advanced-feature-content">
+        <div class="advanced-feature-title">🎨 Custom Alert Types</div>
+        <div class="advanced-feature-desc">
+          The 10 built-in alert types not enough? Create unlimited custom alerts with your own name, emoji, and color scheme. Share configs with your team via JSON import/export.
+        </div>
+        <ul class="feature-list">
+          <li>Custom name, emoji, background, text, and border color</li>
+          <li>Live preview while creating or editing</li>
+          <li>Export your config as JSON to share with teammates</li>
+          <li>Import a config file to sync across machines</li>
+          <li>Edit or reset built-in alerts to your liking</li>
+        </ul>
+      </div>
+      <div class="advanced-feature-visual">
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: var(--space-sm);">⚙️ Custom Alert Creator</div>
+        <div style="display:flex; flex-direction:column; gap: var(--space-xs);">
+          <div class="mock-alert-row" style="background:#e0f2f1; border-left:3px solid #2aa198; color:#055f5b;">✅ <strong>SUCCESS</strong> — built-in</div>
+          <div class="mock-alert-row" style="background:#faf3d1; border-left:3px solid #d4a72c; color:#7c5e10;">⚠️ <strong>WARNING</strong> — built-in</div>
+          <div class="mock-alert-row" style="background:#fff3e0; border-left:3px solid #ff9800; color:#e65100;">🔥 <strong>HOTFIX</strong> — <em>custom</em></div>
+          <div style="margin-top: var(--space-sm); display:flex; gap:8px; justify-content:flex-end;">
+            <span class="mock-mini-btn">📥 Import</span>
+            <span class="mock-mini-btn">📤 Export</span>
+            <span class="mock-mini-btn" style="background: var(--gradient-subtle); border-color: var(--accent); color: var(--accent);">+ Add Alert</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Snippets Manager -->
+    <div class="advanced-feature">
+      <div class="advanced-feature-content">
+        <div class="advanced-feature-title">📌 Snippets Manager</div>
+        <div class="advanced-feature-desc">
+          Save frequently used Markdown blocks as named snippets. Insert them into any journal field from the toolbar, or from the popup with one click. Perfect for standard responses, templates, and boilerplate.
+        </div>
+        <ul class="feature-list">
+          <li>Save any Markdown or converted output as a snippet</li>
+          <li>Insert at cursor position from the in-page toolbar</li>
+          <li>Quick-save from the popup with a name</li>
+          <li>Edit and delete snippets in the settings modal</li>
+          <li>Persisted in Chrome local storage</li>
+        </ul>
+      </div>
+      <div class="advanced-feature-visual">
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: var(--space-sm);">📌 Saved Snippets</div>
+        <div class="mock-snippet-item">
+          <span>🔧 Standard Maintenance Notice</span>
+          <div class="mock-snippet-actions">
+            <span class="mock-mini-btn">✏️</span>
+            <span class="mock-mini-btn">🗑️</span>
+            <span class="mock-mini-btn" style="color: var(--accent); border-color: var(--accent);">Insert</span>
+          </div>
+        </div>
+        <div class="mock-snippet-item">
+          <span>✅ Resolution Summary Template</span>
+          <div class="mock-snippet-actions">
+            <span class="mock-mini-btn">✏️</span>
+            <span class="mock-mini-btn">🗑️</span>
+            <span class="mock-mini-btn" style="color: var(--accent); border-color: var(--accent);">Insert</span>
+          </div>
+        </div>
+        <div class="mock-snippet-item">
+          <span>📋 Change Request Checklist</span>
+          <div class="mock-snippet-actions">
+            <span class="mock-mini-btn">✏️</span>
+            <span class="mock-mini-btn">🗑️</span>
+            <span class="mock-mini-btn" style="color: var(--accent); border-color: var(--accent);">Insert</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- In-Page Toolbar -->
+    <div class="advanced-feature reverse">
+      <div class="advanced-feature-content">
+        <div class="advanced-feature-title">⚡ In-Page Toolbar</div>
+        <div class="advanced-feature-desc">
+          A compact toolbar appears above every ServiceNow journal field automatically. Convert in-place without leaving the page, insert alerts and snippets at your cursor, and undo any conversion with one click.
+        </div>
+        <ul class="feature-list">
+          <li>Auto-detects work_notes, comments, and activity stream fields</li>
+          <li>Convert button: instant in-place Markdown conversion</li>
+          <li>Alert picker: quick-insert any alert type</li>
+          <li>Snippets: insert saved templates at cursor</li>
+          <li>Restore button: one-click undo after conversion</li>
+          <li>Cheatsheet: inline syntax reference</li>
+        </ul>
+      </div>
+      <div class="advanced-feature-visual">
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: var(--space-sm);">⚡ ServiceNow Journal Field</div>
+        <div class="mock-toolbar">
+          <span class="mock-btn active">🔄 Convert</span>
+          <span class="mock-btn">👁 Preview</span>
+          <span class="mock-btn">🔖 Alerts</span>
+          <span class="mock-btn">📋 Snippets</span>
+          <span class="mock-btn">↩️ Restore</span>
+          <span class="mock-btn">?</span>
+        </div>
+        <textarea class="mock-textarea" readonly>## Update
+Everything is **on track** for the Thursday release.
+
+> [!NOTE]
+> No blockers identified.</textarea>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     HOW TO USE / INSTALL
+     ================================================================ -->
+<section class="section" id="how-to-use">
+  <div class="container">
+    <div class="section-label">Get Started</div>
+    <h2 class="section-title">Up and running in 60 seconds</h2>
+    <div class="grid-2" style="gap: var(--space-3xl); align-items: start;">
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">Install from the Chrome Web Store</div>
+            <div class="step-desc">
+              Click the install button or search "Markdown to ServiceNow" in the Chrome Web Store. No sign-in or account required.
+              <!-- TODO(user): Add direct Chrome Web Store link once published -->
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">Pin the extension</div>
+            <div class="step-desc">Click the puzzle icon in Chrome's toolbar → pin "Markdown to ServiceNow" for quick access. Or use the keyboard shortcut <kbd class="kbd">⌘</kbd><kbd class="kbd">Shift</kbd><kbd class="kbd">M</kbd>.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">Open any ServiceNow instance</div>
+            <div class="step-desc">Navigate to any incident, change request, or service request. The toolbar appears automatically on journal fields (Work Notes, Comments, Activity).</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <div class="step-title">Write Markdown, click Convert</div>
+            <div class="step-desc">Type your update in Markdown directly in the journal field, click the Convert button in the toolbar — done. Or use the popup for standalone conversion.</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: var(--space-xl); margin-bottom: var(--space-lg);">
+          <div class="section-label" style="margin-bottom: var(--space-md);">Three ways to convert</div>
+          <div style="display: flex; flex-direction: column; gap: var(--space-md);">
+            <div style="display:flex; gap:var(--space-md); align-items:flex-start;">
+              <span style="font-size:1.5rem;">📝</span>
+              <div>
+                <div style="font-weight:600; margin-bottom:2px;">Popup</div>
+                <div style="font-size:0.875rem; color:var(--text-secondary);">Click icon or press <kbd class="kbd">⌘⇧M</kbd>. Paste markdown, copy output.</div>
+              </div>
+            </div>
+            <div style="display:flex; gap:var(--space-md); align-items:flex-start;">
+              <span style="font-size:1.5rem;">🖱️</span>
+              <div>
+                <div style="font-weight:600; margin-bottom:2px;">Context Menu</div>
+                <div style="font-size:0.875rem; color:var(--text-secondary);">Select text → right-click → "Convert Markdown to ServiceNow" → auto-copied.</div>
+              </div>
+            </div>
+            <div style="display:flex; gap:var(--space-md); align-items:flex-start;">
+              <span style="font-size:1.5rem;">⚡</span>
+              <div>
+                <div style="font-weight:600; margin-bottom:2px;">In-Page Toolbar</div>
+                <div style="font-size:0.875rem; color:var(--text-secondary);">Auto-injected on ServiceNow journal fields. Convert, preview, restore in-place.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Install CTA -->
+        <div id="install" style="background: var(--gradient-subtle); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: var(--space-xl); text-align:center;">
+          <div style="font-size:2rem; margin-bottom: var(--space-sm);">🛒</div>
+          <div style="font-weight:700; font-size:1.1rem; margin-bottom:var(--space-sm);">Ready to install?</div>
+          <div style="font-size:0.875rem; color:var(--text-secondary); margin-bottom:var(--space-lg);">Free. No account. No data collection.</div>
+          <!-- TODO(user): Replace href with actual Chrome Web Store URL after publishing the extension -->
+          <a href="#" class="btn btn-primary btn-lg" style="width:100%; justify-content:center;">
+            🛒 Add to Chrome — Free
+          </a>
+          <div class="todo-callout" style="text-align:left; margin-top: var(--space-md);">
+            <div><strong>TODO (user):</strong> Replace the href="#" above with the actual Chrome Web Store install URL once the extension is published. Format: <code>https://chromewebstore.google.com/detail/[extension-id]</code></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     PRIVACY & SECURITY
+     ================================================================ -->
+<section class="section" id="privacy">
+  <div class="container">
+    <div class="section-label">Privacy & Security</div>
+    <h2 class="section-title">Your data never leaves your browser</h2>
+    <p class="section-subtitle">Markdown to ServiceNow is 100% local. There are no servers, no accounts, no analytics.</p>
+    <div class="privacy-grid">
+      <div class="privacy-card">
+        <span class="privacy-icon">🚫</span>
+        <div class="privacy-title">No Data Collection</div>
+        <div class="privacy-desc">No text you convert is ever stored or transmitted. All conversion happens locally in your browser tab — not on any server.</div>
+      </div>
+      <div class="privacy-card">
+        <span class="privacy-icon">🌐</span>
+        <div class="privacy-title">No Network Requests</div>
+        <div class="privacy-desc">The extension makes zero network requests. It works offline. There are no external API calls, analytics endpoints, or CDN dependencies.</div>
+      </div>
+      <div class="privacy-card">
+        <span class="privacy-icon">💾</span>
+        <div class="privacy-title">Local Storage Only</div>
+        <div class="privacy-desc">Your custom alerts and snippets are stored in Chrome's local storage — on your machine only. They never sync to any external system.</div>
+      </div>
+      <div class="privacy-card">
+        <span class="privacy-icon">🔓</span>
+        <div class="privacy-title">Open Source</div>
+        <div class="privacy-desc">Every line of code is publicly auditable on GitHub. No obfuscated code, no minified scripts with hidden functionality. Read it for yourself.</div>
+      </div>
+      <div class="privacy-card">
+        <span class="privacy-icon">🎯</span>
+        <div class="privacy-title">Minimal Permissions</div>
+        <div class="privacy-desc">Requests only the permissions it needs: clipboard write, context menus, active tab, and storage. No broad host permissions beyond ServiceNow domains.</div>
+      </div>
+      <div class="privacy-card">
+        <span class="privacy-icon">🔒</span>
+        <div class="privacy-title">XSS Protection</div>
+        <div class="privacy-desc">The preview modal sanitizes HTML — stripping event handlers and javascript: URIs before rendering. Shadow DOM isolation prevents style leakage.</div>
+      </div>
+    </div>
+    <div style="margin-top: var(--space-xl); text-align:center;">
+      <a href="https://github.com/yadav-prakhar/markdown-sn-extension/blob/main/PRIVACY_POLICY.md" target="_blank" rel="noopener" class="btn btn-secondary">
+        📄 Read the Full Privacy Policy
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     FAQ
+     ================================================================ -->
+<section class="section" id="faq">
+  <div class="container">
+    <div class="section-label">FAQ</div>
+    <h2 class="section-title">Frequently asked questions</h2>
+    <div class="faq-list" style="max-width: 760px;">
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Does this work on all ServiceNow instances?
+          <span class="faq-icon">▾</span>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Yes. The extension activates on any domain matching <code>*.service-now.com</code> or <code>*.servicenow.com</code>. If your company uses a custom domain for ServiceNow, the toolbar won't auto-inject, but the popup converter and context menu still work on any page.</div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Which journal fields does the toolbar appear on?
+          <span class="faq-icon">▾</span>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">The toolbar appears on Work Notes (<code>work_notes</code>), Comments (<code>comments</code>), and Activity Stream textarea fields. It intentionally excludes short description, description, and resolution notes fields to avoid interfering with non-journal content.</div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Will converting break the ServiceNow field's change events?
+          <span class="faq-icon">▾</span>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">No. After modifying the textarea, the extension fires <code>input</code>, <code>change</code>, and <code>keyup</code> events with <code>bubbles: true</code>, and also calls the field's <code>onchange</code> handler if it exists. ServiceNow's form validation and submission logic should work normally.</div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Can I use custom alert names with spaces or capitals?
+          <span class="faq-icon">▾</span>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Alert type names are stored as uppercase (e.g., <code>HOTFIX</code>) and used in the syntax as <code>&gt; [!HOTFIX]</code>. In the UI they appear with a separate Display Name that can include spaces and mixed case (e.g., "Hot Fix"). The technical name must be lowercase, alphanumeric, and underscores only (max 20 chars).</div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          What happens if I convert the same field twice?
+          <span class="faq-icon">▾</span>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">The restore button (↩️) appears after each conversion and saves a snapshot of the pre-conversion content per field. However, converting twice replaces the snapshot — the restore button will only undo the most recent conversion. If you've converted and already posted the entry, there's no way to recover the original Markdown from the extension (it lives in your browser memory only).</div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Is there a way to share custom alerts with my team?
+          <span class="faq-icon">▾</span>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Yes. In the extension popup, open Settings (⚙️) → Alerts tab → Export button. This downloads a JSON file of all your custom alerts. Your teammates can import it via the Import button in their own extension settings. There's no cloud sync — the import/export is a manual file exchange.</div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Does it support nested lists or blockquotes?
+          <span class="faq-icon">▾</span>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Nested lists are supported with standard indentation (2 or 4 spaces). Single-level blockquotes and alert blocks are fully supported. Deeply nested blockquotes (blockquote within blockquote) may produce unexpected output depending on ServiceNow's HTML renderer.</div>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Is the extension available for Firefox or Safari?
+          <span class="faq-icon">▾</span>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">
+            Currently, only Chrome (and Chromium-based browsers like Edge and Brave) are officially supported. Firefox and Safari support is not planned at this time, but contributions are welcome on GitHub.
+            <!-- TODO(user): Update this answer if Firefox/Safari support is added in the future -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     FOOTER
+     ================================================================ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand-name">
+          <img src="icons/Icon128.png" alt="Extension icon" />
+          Markdown to ServiceNow
+        </div>
+        <div class="footer-brand-desc">
+          A Chrome extension for ServiceNow professionals who write in Markdown. Free, open source, and 100% private.
+        </div>
+        <div style="margin-top: var(--space-md);">
+          <span class="version-badge">v3.0.0</span>
+        </div>
+        <!-- TODO(user): Add author social links (GitHub, LinkedIn, etc.) if desired -->
+        <div class="todo-callout" style="margin-top: var(--space-md); font-size: 0.8rem;">
+          <div><strong>TODO (user):</strong> Add author social links here (GitHub profile, LinkedIn, etc.) if you want to be credited/reachable.</div>
+        </div>
+      </div>
+      <div>
+        <div class="footer-col-title">Extension</div>
+        <ul class="footer-links">
+          <!-- TODO(user): Replace # with actual Chrome Web Store URL -->
+          <li><a href="#">Install from Chrome Web Store</a></li>
+          <li><a href="https://github.com/yadav-prakhar/markdown-sn-extension" target="_blank" rel="noopener">GitHub Repository</a></li>
+          <li><a href="https://github.com/yadav-prakhar/markdown-sn-extension/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></li>
+          <li><a href="https://github.com/yadav-prakhar/markdown-sn-extension/issues" target="_blank" rel="noopener">Report a Bug</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Docs</div>
+        <ul class="footer-links">
+          <li><a href="#features">Features</a></li>
+          <li><a href="#syntax">Syntax Reference</a></li>
+          <li><a href="#alerts">Alert Types</a></li>
+          <li><a href="#how-to-use">Getting Started</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Legal</div>
+        <ul class="footer-links">
+          <li><a href="https://github.com/yadav-prakhar/markdown-sn-extension/blob/main/PRIVACY_POLICY.md" target="_blank" rel="noopener">Privacy Policy</a></li>
+          <li><a href="https://github.com/yadav-prakhar/markdown-sn-extension/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>Built by <a href="https://github.com/yadav-prakhar" target="_blank" rel="noopener">Prakhar Yadav</a> · MIT License</div>
+      <div>
+        <a href="https://github.com/yadav-prakhar/markdown-sn-extension" target="_blank" rel="noopener" style="color: var(--text-muted);">⭐ Star on GitHub</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ================================================================
+     JAVASCRIPT
+     ================================================================ -->
+<script src="lib/markdown-servicenow.js"></script>
+<script>
+(function() {
+  'use strict';
+
+  // ── Theme Toggle ──────────────────────────────────────────────
+  const root = document.documentElement;
+  const themeBtn = document.getElementById('themeToggle');
+  const saved = localStorage.getItem('theme') || 'dark';
+  root.setAttribute('data-theme', saved);
+  themeBtn.textContent = saved === 'dark' ? '☀️' : '🌙';
+
+  themeBtn.addEventListener('click', () => {
+    const current = root.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    themeBtn.textContent = next === 'dark' ? '☀️' : '🌙';
+  });
+
+  // ── Mobile Nav ────────────────────────────────────────────────
+  const hamburger = document.getElementById('hamburger');
+  const navLinks = document.getElementById('navLinks');
+  hamburger.addEventListener('click', () => {
+    navLinks.classList.toggle('open');
+  });
+  navLinks.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => navLinks.classList.remove('open'));
+  });
+
+  // ── Lightbox ──────────────────────────────────────────────────
+  window.openLightbox = function(src, alt) {
+    const lb = document.getElementById('lightbox');
+    const img = document.getElementById('lightboxImg');
+    img.src = src;
+    img.alt = alt;
+    lb.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  };
+  window.closeLightbox = function() {
+    document.getElementById('lightbox').classList.remove('active');
+    document.body.style.overflow = '';
+  };
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeLightbox();
+  });
+
+  // ── FAQ Accordion ─────────────────────────────────────────────
+  window.toggleFaq = function(btn) {
+    const item = btn.closest('.faq-item');
+    item.classList.toggle('open');
+  };
+
+  // ── Alert Types Grid ──────────────────────────────────────────
+  const ALERTS = [
+    { type: 'STATUS',    emoji: '⏳', name: 'Status',    bg: '#f1f3f5', text: '#24292f', border: '#57606a', desc: 'General status update or progress note.' },
+    { type: 'NOTE',      emoji: '📝', name: 'Note',      bg: '#eaf2f8', text: '#325d7a', border: '#5b8def', desc: 'Informational note or additional context.' },
+    { type: 'TIP',       emoji: '💡', name: 'Tip',       bg: '#e6fffb', text: '#0f766e', border: '#14b8a6', desc: 'Helpful tip or best practice suggestion.' },
+    { type: 'IMPORTANT', emoji: '📌', name: 'Important', bg: '#f4ecff', text: '#5a2ea6', border: '#8250df', desc: 'Important information that must not be missed.' },
+    { type: 'SUCCESS',   emoji: '✅', name: 'Success',   bg: '#e0f2f1', text: '#055f5b', border: '#2aa198', desc: 'Successful completion or positive outcome.' },
+    { type: 'ATTENTION', emoji: '👀', name: 'Attention', bg: '#f6efe3', text: '#6b4f1d', border: '#b0882c', desc: 'Requires attention before proceeding.' },
+    { type: 'WARNING',   emoji: '⚠️', name: 'Warning',   bg: '#faf3d1', text: '#7c5e10', border: '#d4a72c', desc: 'Potential issue or risk to be aware of.' },
+    { type: 'CAUTION',   emoji: '⛔', name: 'Caution',   bg: '#fdecef', text: '#7a1f3d', border: '#c9375e', desc: 'Stop and review before taking action.' },
+    { type: 'BLOCKER',   emoji: '🚫', name: 'Blocker',   bg: '#ede7f6', text: '#2d1b3d', border: '#6f42c1', desc: 'Blocking issue that prevents progress.' },
+    { type: 'QUESTION',  emoji: '❓', name: 'Question',  bg: '#f6f4ea', text: '#4f4a2f', border: '#d4cb94', desc: 'Open question or item needing clarification.' },
+  ];
+
+  const grid = document.getElementById('alertsGrid');
+  ALERTS.forEach(a => {
+    const card = document.createElement('div');
+    card.className = 'alert-card';
+    card.style.background = a.bg;
+    card.style.borderLeftColor = a.border;
+    card.style.color = a.text;
+    card.innerHTML = `
+      <div class="alert-card-header">
+        <span>${a.emoji}</span>
+        <span>${a.name.toUpperCase()}</span>
+      </div>
+      <div class="alert-card-syntax">&gt; [!${a.type}]</div>
+      <div class="alert-card-desc">${a.desc}</div>
+    `;
+    grid.appendChild(card);
+  });
+
+  // ── Live Demo ─────────────────────────────────────────────────
+  const PRESETS = {
+    basic: `## Weekly Update
+
+Everything is **on track** for the Thursday release.
+
+The following items have been completed:
+- ✅ Code review approved
+- ✅ Unit tests passing (98% coverage)
+- ⏳ Deployment to staging in progress
+
+> [!NOTE]
+> The staging environment will be updated by **5pm EST**.
+
+Please review and approve by *end of day*.`,
+
+    alert: `> [!SUCCESS]
+> All tests passed. Ready for production deployment.
+
+> [!WARNING]
+> The database migration requires a maintenance window.
+> Estimated downtime: 5 minutes.
+
+> [!BLOCKER]
+> Missing sign-off from Change Advisory Board.
+> CAB meeting is scheduled for Thursday at 2pm.
+
+> [!TIP]
+> Use the rollback script at \`/scripts/rollback.sh\` if needed.`,
+
+    table: `## Affected Systems
+
+| System | Status | Owner | ETA |
+|--------|--------|-------|-----|
+| Auth Service | 🟡 Degraded | Team A | 2h |
+| API Gateway | 🟢 Normal | Team B | — |
+| Database | 🔴 Down | DBA Team | 4h |
+| Cache Layer | 🟢 Normal | Team C | — |
+
+*Last updated: Thursday 14:30 UTC*`,
+
+    code: `## Steps to Reproduce
+
+1. Navigate to the login page
+2. Enter credentials and click **Sign In**
+3. Observe the error in the console
+
+\`\`\`javascript
+// Error thrown in auth.js line 47:
+TypeError: Cannot read property 'token' of undefined
+  at AuthService.validateToken (auth.js:47)
+  at LoginController.handleSubmit (login.js:23)
+\`\`\`
+
+The fix requires checking for \`undefined\` before accessing \`.token\`.`,
+
+    full: `# Incident Report: INC0001234
+
+**Severity:** P2 — High
+**Status:** In Progress
+**Assigned to:** Platform Team
+
+---
+
+## Summary
+
+Users in the EMEA region are experiencing **intermittent 503 errors** when accessing the customer portal between 09:00–11:00 UTC.
+
+> [!CAUTION]
+> Do not restart the primary load balancer without a maintenance window. See change request CHG0005678.
+
+## Impact
+
+| Region | Users Affected | % of Traffic |
+|--------|---------------|-------------|
+| EMEA | ~2,400 | 18% |
+| APAC | None | 0% |
+| AMER | None | 0% |
+
+## Root Cause
+
+The issue traces to a memory leak in the session manager introduced in **build 4.2.1**:
+
+\`\`\`
+OutOfMemoryError: GC overhead limit exceeded
+  at SessionManager.cleanup (session.js:142)
+\`\`\`
+
+## Action Items
+
+1. Deploy hotfix build 4.2.2 to EMEA nodes
+2. Monitor error rate for 30 minutes post-deploy
+3. Schedule post-mortem for Friday
+
+> [!SUCCESS]
+> Hotfix is tested and ready. Deployment approved by CAB.`
+  };
+
+  let activePreset = 'basic';
+  const demoInput = document.getElementById('demoInput');
+  const demoOutput = document.getElementById('demoOutput');
+  const demoCharCount = document.getElementById('demoCharCount');
+
+  window.loadPreset = function(name) {
+    activePreset = name;
+    demoInput.value = PRESETS[name] || '';
+    convertDemo();
+    document.querySelectorAll('.demo-preset-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById('preset-' + name);
+    if (btn) btn.classList.add('active');
+  };
+
+  function convertDemo() {
+    const input = demoInput.value;
+    demoCharCount.textContent = input.length + ' characters';
+    if (!input.trim()) {
+      demoOutput.textContent = '// Start typing Markdown on the left...';
+      return;
+    }
+    try {
+      if (typeof window.markdownServicenow !== 'undefined' && window.markdownServicenow.convertMarkdownToServiceNow) {
+        const result = window.markdownServicenow.convertMarkdownToServiceNow(input);
+        demoOutput.textContent = result;
+      } else {
+        demoOutput.textContent = '// Library loading... please wait.';
+      }
+    } catch(e) {
+      demoOutput.textContent = '// Conversion error: ' + e.message;
+    }
+  }
+
+  let debounceTimer;
+  demoInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(convertDemo, 150);
+  });
+
+  // Load default preset
+  loadPreset('basic');
+
+  // ── Smooth scroll for nav links ───────────────────────────────
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // ── Active nav highlighting ───────────────────────────────────
+  const sections = document.querySelectorAll('section[id]');
+  const navItems = document.querySelectorAll('.nav-links a');
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.getAttribute('id');
+          navItems.forEach(a => {
+            a.style.color = a.getAttribute('href') === '#' + id
+              ? 'var(--text)'
+              : 'var(--text-secondary)';
+          });
+        }
+      });
+    }, { threshold: 0.3, rootMargin: '-60px 0px -50% 0px' });
+    sections.forEach(s => observer.observe(s));
+  }
+
+})();
+</script>
+</body>
+</html>
