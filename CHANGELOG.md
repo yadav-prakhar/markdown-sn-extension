@@ -5,6 +5,22 @@ All notable changes to the "Markdown to ServiceNow" extension will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-04-08
+
+### Added
+
+- **Preview Modal** — New 👁 button opens a side-by-side live preview of markdown and rendered output before applying changes
+- **Alert Picker** — New 🔖 button on journal field toolbars lets you insert any built-in or custom alert type at the cursor position
+- **Restore / Undo** — New ↩️ button appears after conversion to restore the original markdown (per-field undo)
+- `sanitizeHtml()` helper strips `on*` event handlers and `javascript:` URIs from preview content for XSS safety
+- `debounce()` helper for throttled live preview rendering
+
+### Changed
+
+- Toolbar uses `inline-flex` with `align-items: center` for better vertical alignment
+- Toolbar styling moved from inline JS to CSS class (`md-sn-toolbar`)
+- `createToolbar()` now accepts the textarea reference and wires up all button handlers internally
+
 ## [2.0.0] - 2026-01-14
 
 ### Added

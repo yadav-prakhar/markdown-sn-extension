@@ -9,7 +9,7 @@ Project instructions for Claude Code when working with this repository.
 2. **Context menu** - Right-click selected text to convert
 3. **In-page buttons** - Convert buttons on ServiceNow journal fields
 
-**Version:** 2.0.0
+**Version:** 3.0.0
 **Library:** markdown-servicenow v1.0.5 (bundled)
 
 ## Quick Reference

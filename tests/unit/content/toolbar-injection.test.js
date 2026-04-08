@@ -70,9 +70,6 @@ describe('Content Script - Toolbar Injection', () => {
 
       textareaParent.parentNode.insertBefore(toolbar, textareaParent.nextSibling);
 
-      toolbar.style.display = "inline-block";
-      toolbar.style.margin = "4px 0 12px 4px";
-
       toolbar.querySelector(`.${BUTTON_CLASS}`).addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -240,8 +237,7 @@ describe('Content Script - Toolbar Injection', () => {
       addToolbarToField(textarea);
 
       const toolbar = parent.querySelector(`.${TOOLBAR_CLASS}`);
-      expect(toolbar.style.display).toBe('inline-block');
-      expect(toolbar.style.margin).toBe('4px 0px 12px 4px');
+      expect(toolbar.className).toBe(TOOLBAR_CLASS);
 
       document.body.removeChild(parent);
     });
@@ -300,7 +296,7 @@ describe('Content Script - Toolbar Injection', () => {
       expect(button).not.toBeNull();
       expect(img).not.toBeNull();
       expect(button.type).toBe('button');
-      expect(toolbar.style.display).toBe('inline-block');
+      expect(toolbar.className).toBe(TOOLBAR_CLASS);
 
       document.body.removeChild(parent);
     });

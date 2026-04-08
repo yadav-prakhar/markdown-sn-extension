@@ -1,8 +1,10 @@
 /* Markdown to ServiceNow - Content Script Styles */
 
 .md-sn-toolbar {
-  display: flex;
+  display: inline-flex;
+  align-items: center;
   gap: 4px;
+  margin: 4px 0 12px 4px;
   pointer-events: auto;
 }
 
@@ -73,4 +75,33 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Preview, alert picker, and restore buttons */
+.md-sn-preview-btn,
+.md-sn-alert-picker-btn,
+.md-sn-restore-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 5px !important;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.md-sn-preview-btn:hover,
+.md-sn-alert-picker-btn:hover,
+.md-sn-restore-btn:hover {
+  opacity: 1;
+}
+
+.md-sn-preview-btn:active,
+.md-sn-alert-picker-btn:active,
+.md-sn-restore-btn:active {
+  opacity: 0.6;
 }

@@ -5,7 +5,7 @@
 
 [Outputs](#output) • [Installation](#installation) • [Usage](#usage) • [Support](#support)
 
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a> &nbsp; <a href="https://github.com/yadav-prakhar/markdown-sn-extension/releases"><img src="https://img.shields.io/badge/version-2.0.0-blue.svg" alt="Version: 2.0.0"></a> &nbsp; <a href="https://www.producthunt.com/products/markdown-to-servicenow?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-markdown-to-servicenow" target="_blank" rel="noopener noreferrer"><img alt="Markdown to ServiceNow - Write Markdown in ServiceNow journal fields | Product Hunt" width="100" height="34" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1051297&amp;theme=light&amp;t=1765978521182"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a> &nbsp; <a href="https://github.com/yadav-prakhar/markdown-sn-extension/releases"><img src="https://img.shields.io/badge/version-3.0.0-blue.svg" alt="Version: 3.0.0"></a> &nbsp; <a href="https://www.producthunt.com/products/markdown-to-servicenow?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-markdown-to-servicenow" target="_blank" rel="noopener noreferrer"><img alt="Markdown to ServiceNow - Write Markdown in ServiceNow journal fields | Product Hunt" width="100" height="34" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1051297&amp;theme=light&amp;t=1765978521182"></a>
 </div>
 
 Convert Markdown to ServiceNow journal field format directly in your browser. Write in Markdown, convert with one click, and paste into ServiceNow.
@@ -15,7 +15,7 @@ Convert Markdown to ServiceNow journal field format directly in your browser. Wr
 
 - **📝 Popup Converter** — Click the extension icon, paste markdown, get ServiceNow-ready output
 - **🖱️ Context Menu** — Right-click selected text to convert in place
-- **⚡ ServiceNow Integration** — Adds a convert button directly on journal fields
+- **⚡ ServiceNow Integration** — Adds a toolbar directly on journal fields with convert, live preview, alert picker, and undo
 - **⌨️ Keyboard Shortcut** — `Cmd+Shift+M` (Mac) / `Ctrl+Shift+M` (Windows/Linux)
 - **🎨 Custom Alerts** — Create personalized alert types with custom colors and emojis
 - **🔒 Privacy-First** — All processing happens locally, no data sent to servers
