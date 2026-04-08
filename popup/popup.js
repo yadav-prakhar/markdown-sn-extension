@@ -5,6 +5,9 @@ const copyBtn = document.getElementById('copyBtn');
 const clearBtn = document.getElementById('clearBtn');
 const charCountEl = document.getElementById('charCount');
 const toastEl = document.getElementById('toast');
+const saveSnippetQuickBtn = document.getElementById('saveSnippetQuickBtn');
+const quickSaveForm = document.getElementById('quickSaveForm');
+const quickSaveNameInput = document.getElementById('quickSaveName');
 
 // Settings Modal Elements
 const settingsBtn = document.getElementById('settingsBtn');
@@ -32,6 +35,7 @@ const alertPickerEl = document.getElementById('alertPicker');
 // State
 let customAlerts = {};
 let builtInAlerts = {};
+let snippets = [];
 
 // Debounce helper
 function debounce(fn, delay) {
@@ -50,6 +54,7 @@ function convert() {
     outputEl.value = '';
     charCountEl.textContent = '0 chars';
     copyBtn.disabled = true;
+    saveSnippetQuickBtn.disabled = true;
     return;
   }
 
@@ -58,10 +63,12 @@ function convert() {
     outputEl.value = result;
     charCountEl.textContent = `${result.length} chars`;
     copyBtn.disabled = false;
+    saveSnippetQuickBtn.disabled = false;
   } catch (error) {
     console.error('MD-SN Popup: Conversion error:', error);
     outputEl.value = `Error: ${error.message}`;
     copyBtn.disabled = true;
+    saveSnippetQuickBtn.disabled = true;
   }
 }
 
@@ -103,7 +110,27 @@ function clearAll() {
   outputEl.value = '';
   charCountEl.textContent = '0 chars';
   copyBtn.disabled = true;
+  saveSnippetQuickBtn.disabled = true;
+  quickSaveForm.classList.add('hidden');
+  quickSaveNameInput.value = '';
   inputEl.focus();
+}
+
+function saveQuickSnippet() {
+  const name = quickSaveNameInput.value.trim();
+  if (!name) {
+    quickSaveNameInput.focus();
+    quickSaveNameInput.style.borderColor = '#e74c3c';
+    return;
+  }
+  const content = outputEl.value;
+  snippets.push({ id: Date.now().toString(), name, content });
+  saveSnippetsToStorage();
+  renderSnippetsList();
+  quickSaveForm.classList.add('hidden');
+  quickSaveNameInput.value = '';
+  quickSaveNameInput.style.borderColor = '';
+  showToast('Snippet saved!');
 }
 
 // ==================== Alert Picker ====================
@@ -149,8 +176,11 @@ function insertAlertSyntax(alertName) {
 // ==================== Settings Modal ====================
 
 function openSettingsModal() {
+  quickSaveForm.classList.add('hidden');
+  quickSaveNameInput.value = '';
   renderAlertsList();
   resetAlertForm();
+  renderSnippetsList();
   settingsModal.classList.remove('hidden');
 }
 
@@ -438,6 +468,170 @@ function loadCustomAlertsFromStorage() {
   });
 }
 
+function saveSnippetsToStorage() {
+  chrome.storage.local.set({ snippets });
+}
+
+function loadSnippetsFromStorage() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['snippets'], (result) => {
+      snippets = result.snippets || [];
+      resolve();
+    });
+  });
+}
+
+// ==================== Snippets ====================
+
+function renderSnippetsList() {
+  const snippetsList = document.getElementById('snippetsList');
+  snippetsList.innerHTML = '';
+
+  if (snippets.length === 0) {
+    snippetsList.innerHTML = '<span class="no-snippets">No snippets yet</span>';
+    return;
+  }
+
+  for (const snippet of snippets) {
+    const item = document.createElement('div');
+    item.className = 'snippet-item';
+
+    const nameEl = document.createElement('span');
+    nameEl.className = 'snippet-name';
+    nameEl.textContent = snippet.name;
+
+    const actionsEl = document.createElement('span');
+    actionsEl.className = 'snippet-actions';
+
+    for (const [action, label, title] of [['insert', '▶', 'Insert'], ['edit', '✏️', 'Edit'], ['delete', '🗑️', 'Delete']]) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.dataset.action = action;
+      btn.dataset.id = snippet.id;
+      btn.title = title;
+      btn.textContent = label;
+      actionsEl.appendChild(btn);
+    }
+
+    item.appendChild(nameEl);
+    item.appendChild(actionsEl);
+    snippetsList.appendChild(item);
+  }
+
+  snippetsList.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', handleSnippetAction);
+  });
+}
+
+function handleSnippetAction(e) {
+  const action = e.target.dataset.action;
+  const id = e.target.dataset.id;
+
+  if (action === 'edit') {
+    editSnippet(id);
+  } else if (action === 'delete') {
+    deleteSnippet(id);
+  } else if (action === 'insert') {
+    const snippet = snippets.find(s => s.id === id);
+    if (snippet) {
+      insertSnippetIntoInput(snippet.content);
+      closeSettingsModal();
+    }
+  }
+}
+
+function editSnippet(id) {
+  const snippet = snippets.find(s => s.id === id);
+  if (!snippet) return;
+
+  const snippetFormTitle = document.getElementById('snippetFormTitle');
+  const editingSnippetInput = document.getElementById('editingSnippet');
+  const snippetNameInput = document.getElementById('snippetName');
+  const snippetContentInput = document.getElementById('snippetContent');
+  const saveSnippetBtn = document.getElementById('saveSnippetBtn');
+  const cancelSnippetEditBtn = document.getElementById('cancelSnippetEditBtn');
+
+  snippetFormTitle.textContent = 'Edit Snippet';
+  editingSnippetInput.value = id;
+  snippetNameInput.value = snippet.name;
+  snippetContentInput.value = snippet.content;
+  saveSnippetBtn.textContent = 'Save Changes';
+  cancelSnippetEditBtn.classList.remove('hidden');
+}
+
+function resetSnippetForm() {
+  const snippetFormTitle = document.getElementById('snippetFormTitle');
+  const editingSnippetInput = document.getElementById('editingSnippet');
+  const snippetNameInput = document.getElementById('snippetName');
+  const snippetContentInput = document.getElementById('snippetContent');
+  const saveSnippetBtn = document.getElementById('saveSnippetBtn');
+  const cancelSnippetEditBtn = document.getElementById('cancelSnippetEditBtn');
+
+  snippetFormTitle.textContent = 'Add New Snippet';
+  editingSnippetInput.value = '';
+  snippetNameInput.value = '';
+  snippetContentInput.value = '';
+  saveSnippetBtn.textContent = 'Add Snippet';
+  cancelSnippetEditBtn.classList.add('hidden');
+}
+
+function saveSnippet(e) {
+  e.preventDefault();
+
+  const editingSnippetInput = document.getElementById('editingSnippet');
+  const snippetNameInput = document.getElementById('snippetName');
+  const snippetContentInput = document.getElementById('snippetContent');
+
+  const name = snippetNameInput.value.trim();
+  const content = snippetContentInput.value.trim();
+  const editingId = editingSnippetInput.value;
+
+  if (!name) {
+    showToast('Snippet name is required');
+    return;
+  }
+
+  if (!content) {
+    showToast('Snippet content is required');
+    return;
+  }
+
+  if (editingId) {
+    const idx = snippets.findIndex(s => s.id === editingId);
+    if (idx !== -1) {
+      snippets[idx] = { id: editingId, name, content };
+    }
+  } else {
+    snippets.push({ id: Date.now().toString(), name, content });
+  }
+
+  saveSnippetsToStorage();
+  renderSnippetsList();
+  resetSnippetForm();
+  showToast('Snippet saved!');
+}
+
+function deleteSnippet(id) {
+  snippets = snippets.filter(s => s.id !== id);
+  saveSnippetsToStorage();
+  renderSnippetsList();
+  showToast('Snippet deleted');
+}
+
+function insertSnippetIntoInput(content) {
+  const cursorPos = inputEl.selectionStart;
+  const textBefore = inputEl.value.substring(0, cursorPos);
+  const textAfter = inputEl.value.substring(inputEl.selectionEnd);
+
+  const needsNewline = textBefore.length > 0 && !textBefore.endsWith('\n');
+  const insertion = (needsNewline ? '\n' : '') + content;
+
+  inputEl.value = textBefore + insertion + textAfter;
+  inputEl.focus();
+  inputEl.selectionStart = inputEl.selectionEnd = cursorPos + insertion.length;
+  convert();
+}
+
 // Event listeners
 inputEl.addEventListener('input', debounce(convert, 150));
 copyBtn.addEventListener('click', copyToClipboard);
@@ -455,6 +649,46 @@ importBtn.addEventListener('click', importAlerts);
 exportBtn.addEventListener('click', exportAlerts);
 importFileInput.addEventListener('change', handleImportFile);
 
+// Tab switching
+document.getElementById('tabAlerts').addEventListener('click', () => {
+  document.getElementById('tabAlerts').classList.add('active');
+  document.getElementById('tabSnippets').classList.remove('active');
+  document.getElementById('alertsTab').classList.remove('hidden');
+  document.getElementById('snippetsTab').classList.add('hidden');
+});
+document.getElementById('tabSnippets').addEventListener('click', () => {
+  document.getElementById('tabSnippets').classList.add('active');
+  document.getElementById('tabAlerts').classList.remove('active');
+  document.getElementById('snippetsTab').classList.remove('hidden');
+  document.getElementById('alertsTab').classList.add('hidden');
+});
+
+// Snippet form event listeners
+document.getElementById('snippetForm').addEventListener('submit', saveSnippet);
+document.getElementById('cancelSnippetEditBtn').addEventListener('click', resetSnippetForm);
+
+// Quick save snippet event listeners
+saveSnippetQuickBtn.addEventListener('click', () => {
+  quickSaveForm.classList.remove('hidden');
+  quickSaveNameInput.value = '';
+  quickSaveNameInput.style.borderColor = '';
+  quickSaveNameInput.focus();
+});
+document.getElementById('quickSaveConfirmBtn').addEventListener('click', saveQuickSnippet);
+document.getElementById('quickSaveCancelBtn').addEventListener('click', () => {
+  quickSaveForm.classList.add('hidden');
+  quickSaveNameInput.value = '';
+  quickSaveNameInput.style.borderColor = '';
+});
+quickSaveNameInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') saveQuickSnippet();
+  if (e.key === 'Escape') {
+    quickSaveForm.classList.add('hidden');
+    quickSaveNameInput.value = '';
+    quickSaveNameInput.style.borderColor = '';
+  }
+});
+
 // Update preview on form changes
 [alertEmojiInput, alertDisplayNameInput, alertBgColorInput, alertTextColorInput, alertBorderColorInput].forEach(input => {
   input.addEventListener('input', updatePreview);
@@ -467,6 +701,9 @@ async function init() {
 
   // Load custom alerts from storage
   await loadCustomAlertsFromStorage();
+
+  // Load snippets from storage
+  await loadSnippetsFromStorage();
 
   // Render alert picker
   renderAlertPicker();

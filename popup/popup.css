@@ -499,3 +499,149 @@ textarea::-webkit-scrollbar-thumb:hover {
 .hidden {
   display: none !important;
 }
+
+/* Modal Tabs */
+.modal-tabs {
+  display: flex;
+  flex-direction: row;
+  border-bottom: 1px solid #333;
+}
+
+.modal-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #888;
+  padding: 10px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+  margin-bottom: -1px;
+}
+
+.modal-tab:hover {
+  color: #ccc;
+}
+
+.modal-tab.active {
+  color: #fff;
+  border-bottom: 2px solid #667eea;
+}
+
+/* Snippets */
+.snippets-section h3 {
+  font-size: 12px;
+  font-weight: 500;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.snippet-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #2d2d44;
+  border-radius: 6px;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.snippet-item .snippet-name {
+  flex: 1;
+  color: #ccc;
+}
+
+.snippet-item .snippet-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+}
+
+.snippet-item button {
+  background: none;
+  border: none;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  opacity: 0.6;
+}
+
+.snippet-item button:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.no-snippets {
+  color: #666;
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* Snippet Form */
+.snippet-form-section {
+  border-top: 1px solid #333;
+  padding-top: 16px;
+}
+
+.snippet-form-section h3 {
+  font-size: 12px;
+  font-weight: 500;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+#snippetContent {
+  display: inline-block;
+  width: 100%;
+  height: 80px;
+  padding: 8px;
+  border: 1px solid #333;
+  border-radius: 4px;
+  background: #16213e;
+  color: #eee;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+#snippetContent:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+/* Quick Save Snippet Form */
+.quick-save-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0 2px;
+}
+
+.quick-save-form input {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1px solid #444;
+  border-radius: 6px;
+  background: #16213e;
+  color: #eee;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.quick-save-form input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.quick-save-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}

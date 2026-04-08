@@ -15,6 +15,51 @@
   let customAlerts = {};
   let builtInAlerts = {};
 
+  // Snippets state
+  let snippets = [];
+
+  // Cheatsheet data
+  const CHEATSHEET = [
+    { category: 'Text Formatting', items: [
+      { label: '**bold**', insert: '**bold**' },
+      { label: '*italic*', insert: '*italic*' },
+      { label: '~~strikethrough~~', insert: '~~strikethrough~~' },
+      { label: '==highlight==', insert: '==highlight==' },
+      { label: '***bold italic***', insert: '***bold italic***' },
+    ]},
+    { category: 'Headers', items: [
+      { label: '# H1', insert: '# Heading 1' },
+      { label: '## H2', insert: '## Heading 2' },
+      { label: '### H3', insert: '### Heading 3' },
+    ]},
+    { category: 'Lists', items: [
+      { label: '- Unordered list', insert: '- Item 1\n- Item 2\n- Item 3' },
+      { label: '1. Ordered list', insert: '1. Item 1\n2. Item 2\n3. Item 3' },
+    ]},
+    { category: 'Code', items: [
+      { label: '`inline code`', insert: '`code`' },
+      { label: '``` code block ```', insert: '```\ncode here\n```' },
+    ]},
+    { category: 'Links & Images', items: [
+      { label: '[link text](url)', insert: '[link text](https://example.com)' },
+      { label: '![alt text](url)', insert: '![alt text](https://example.com/image.png)' },
+    ]},
+    { category: 'Blockquotes & Rules', items: [
+      { label: '> blockquote', insert: '> blockquote text' },
+      { label: '--- horizontal rule', insert: '---' },
+    ]},
+    { category: 'Tables', items: [
+      { label: '| table |', insert: '| Column 1 | Column 2 |\n|----------|----------|\n| Cell 1   | Cell 2   |' },
+    ]},
+    { category: 'Alerts', items: [
+      { label: '> [!NOTE]', insert: '> [!NOTE]\n> ' },
+      { label: '> [!WARNING]', insert: '> [!WARNING]\n> ' },
+      { label: '> [!IMPORTANT]', insert: '> [!IMPORTANT]\n> ' },
+      { label: '> [!SUCCESS]', insert: '> [!SUCCESS]\n> ' },
+      { label: '> [!CAUTION]', insert: '> [!CAUTION]\n> ' },
+    ]},
+  ];
+
   // Undo state: stores original markdown before in-place conversion
   const originalMarkdowns = new WeakMap();
 
@@ -29,11 +74,24 @@
     });
   }
 
+  // Load snippets from storage
+  function loadSnippets() {
+    return new Promise((resolve) => {
+      chrome.storage.local.get(['snippets'], (result) => {
+        snippets = result.snippets || [];
+        resolve();
+      });
+    });
+  }
+
   // Listen for storage changes
   chrome.storage.onChanged.addListener((changes, areaName) => {
     if (areaName === 'local' && changes.customAlertTypes) {
       customAlerts = changes.customAlertTypes.newValue || {};
       console.log('MD-SN: Custom alerts updated:', Object.keys(customAlerts).length);
+    }
+    if (areaName === 'local' && changes.snippets) {
+      snippets = changes.snippets.newValue || [];
     }
   });
 
@@ -140,6 +198,24 @@
     return btn;
   }
 
+  function createSnippetsButton() {
+    const btn = document.createElement('button');
+    btn.className = 'md-sn-snippets-btn';
+    btn.textContent = '📋';
+    btn.title = 'Insert snippet';
+    btn.type = 'button';
+    return btn;
+  }
+
+  function createCheatsheetButton() {
+    const btn = document.createElement('button');
+    btn.className = 'md-sn-cheatsheet-btn';
+    btn.textContent = '?';
+    btn.title = 'Markdown cheatsheet';
+    btn.type = 'button';
+    return btn;
+  }
+
   function showRestoreButton(toolbar) {
     const btn = toolbar.querySelector('.md-sn-restore-btn');
     if (btn) btn.style.display = 'inline-flex';
@@ -180,7 +256,15 @@
       openAlertPicker(textarea, alertBtn);
     });
 
-    // Button 4: Restore (hidden initially)
+    // Button 4: Snippets
+    const snippetsBtn = createSnippetsButton();
+    snippetsBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openSnippetPicker(textarea, snippetsBtn);
+    });
+
+    // Button 5: Restore (hidden initially)
     const restoreBtn = createRestoreButton();
     restoreBtn.style.display = 'none';
     restoreBtn.addEventListener('click', (e) => {
@@ -189,10 +273,20 @@
       restoreMarkdown(textarea, toolbar);
     });
 
+    // Button 6: Cheatsheet
+    const cheatsheetBtn = createCheatsheetButton();
+    cheatsheetBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openCheatsheet(textarea, cheatsheetBtn);
+    });
+
     toolbar.appendChild(convertBtn);
     toolbar.appendChild(previewBtn);
     toolbar.appendChild(alertBtn);
+    toolbar.appendChild(snippetsBtn);
     toolbar.appendChild(restoreBtn);
+    toolbar.appendChild(cheatsheetBtn);
 
     return toolbar;
   }
@@ -632,6 +726,421 @@
     textarea.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
+  // ==================== Snippet Picker ====================
+
+  function insertSnippetIntoTextarea(textarea, content, savedCursor) {
+    const start = savedCursor.start;
+    const end = savedCursor.end;
+    const textBefore = textarea.value.substring(0, start);
+    const textAfter = textarea.value.substring(end);
+    const needsNewline = textBefore.length > 0 && !textBefore.endsWith('\n');
+    const insertion = (needsNewline ? '\n' : '') + content;
+    textarea.value = textBefore + insertion + textAfter;
+    textarea.focus();
+    textarea.selectionStart = textarea.selectionEnd = start + insertion.length;
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  function openSnippetPicker(textarea, anchorBtn) {
+    // Toggle: close dropdown if already open
+    const existing = document.querySelector('.md-sn-snippets-host');
+    if (existing) {
+      existing.remove();
+      return;
+    }
+
+    // Save cursor position before textarea loses focus from click
+    const savedCursor = {
+      start: textarea.selectionStart != null ? textarea.selectionStart : textarea.value.length,
+      end: textarea.selectionEnd != null ? textarea.selectionEnd : textarea.value.length
+    };
+
+    // Shadow host for CSS isolation
+    const host = document.createElement('div');
+    host.className = 'md-sn-snippets-host';
+    document.body.appendChild(host);
+    const shadow = host.attachShadow({ mode: 'open' });
+
+    // Position: fixed, below anchor button; flip upward if near viewport bottom
+    const rect = anchorBtn.getBoundingClientRect();
+    const DROPDOWN_HEIGHT = 280;
+    const top = (rect.bottom + DROPDOWN_HEIGHT > window.innerHeight)
+      ? Math.max(4, rect.top - DROPDOWN_HEIGHT)
+      : rect.bottom + 4;
+    const left = Math.min(rect.left, window.innerWidth - 200);
+
+    const style = document.createElement('style');
+    style.textContent = `
+      .dropdown {
+        position: fixed;
+        top: ${top}px;
+        left: ${left}px;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        z-index: 9999999;
+        min-width: 180px;
+        max-height: 280px;
+        overflow-y: auto;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+      .item {
+        display: flex; align-items: center;
+        padding: 8px 12px; cursor: pointer;
+        font-size: 13px; color: #333;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .item:last-child { border-bottom: none; }
+      .item:hover { background: #f5f5f5; }
+      .snippet-name { font-weight: 500; }
+      .empty {
+        padding: 12px; font-size: 13px; color: #999;
+        font-style: italic; text-align: center;
+      }
+      .add-btn {
+        display: flex; align-items: center; gap: 6px;
+        padding: 8px 12px; cursor: pointer;
+        font-size: 13px; color: #666;
+        border-top: 1px solid #e8e8e8;
+        background: #fafafa;
+        border-radius: 0 0 6px 6px;
+      }
+      .add-btn:hover { background: #f0f0f0; color: #333; }
+      .add-form {
+        display: none; flex-direction: column; gap: 8px;
+        padding: 10px 12px;
+        border-top: 1px solid #e8e8e8;
+        background: #fafafa;
+        border-radius: 0 0 6px 6px;
+      }
+      .add-form input, .add-form textarea {
+        width: 100%; box-sizing: border-box;
+        border: 1px solid #ddd; border-radius: 4px;
+        padding: 6px 8px; font-size: 12px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        color: #333; background: #fff;
+      }
+      .add-form input:focus, .add-form textarea:focus {
+        outline: none; border-color: #667eea;
+      }
+      .add-form textarea { resize: vertical; min-height: 60px; max-height: 120px; }
+      .add-form-row { display: flex; gap: 6px; }
+      .add-form .save-btn {
+        flex: 1; padding: 5px 10px; border: none; border-radius: 4px;
+        background: #667eea; color: #fff; cursor: pointer; font-size: 12px;
+      }
+      .add-form .save-btn:hover { background: #5a6fd8; }
+      .add-form .cancel-btn {
+        flex: 1; padding: 5px 10px; border: none; border-radius: 4px;
+        background: #e0e0e0; color: #555; cursor: pointer; font-size: 12px;
+      }
+      .add-form .cancel-btn:hover { background: #ccc; }
+      .add-form .error { border-color: #e74c3c !important; }
+    `;
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'dropdown';
+
+    if (snippets.length === 0) {
+      const emptyEl = document.createElement('div');
+      emptyEl.className = 'empty';
+      emptyEl.textContent = 'No snippets saved';
+      dropdown.appendChild(emptyEl);
+    } else {
+      for (const snippet of snippets) {
+        const item = document.createElement('div');
+        item.className = 'item';
+        const nameEl = document.createElement('span');
+        nameEl.className = 'snippet-name';
+        nameEl.textContent = snippet.name || snippet.title || 'Snippet';
+        item.appendChild(nameEl);
+
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          insertSnippetIntoTextarea(textarea, snippet.content, savedCursor);
+          host.remove();
+          document.removeEventListener('click', closeListener, { capture: true });
+        });
+
+        dropdown.appendChild(item);
+      }
+    }
+
+    // Add new snippet section
+    const addBtn = document.createElement('div');
+    addBtn.className = 'add-btn';
+    addBtn.innerHTML = '<span>＋</span><span>Add new snippet</span>';
+
+    const addForm = document.createElement('div');
+    addForm.className = 'add-form';
+
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.placeholder = 'Snippet name...';
+    nameInput.maxLength = 40;
+
+    const contentInput = document.createElement('textarea');
+    contentInput.placeholder = 'Snippet content...';
+    contentInput.value = textarea.value;
+
+    const formRow = document.createElement('div');
+    formRow.className = 'add-form-row';
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'save-btn';
+    saveBtn.textContent = 'Save';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'cancel-btn';
+    cancelBtn.textContent = 'Cancel';
+
+    formRow.appendChild(saveBtn);
+    formRow.appendChild(cancelBtn);
+    addForm.appendChild(nameInput);
+    addForm.appendChild(contentInput);
+    addForm.appendChild(formRow);
+
+    dropdown.appendChild(addBtn);
+    dropdown.appendChild(addForm);
+
+    addBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      addBtn.style.display = 'none';
+      addForm.style.display = 'flex';
+      nameInput.focus();
+    });
+
+    cancelBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      addForm.style.display = 'none';
+      addBtn.style.display = '';
+      nameInput.value = '';
+      nameInput.classList.remove('error');
+    });
+
+    saveBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const name = nameInput.value.trim();
+      if (!name) {
+        nameInput.classList.add('error');
+        nameInput.focus();
+        return;
+      }
+      const content = contentInput.value;
+      const newSnippet = { id: Date.now().toString(), name, content };
+
+      chrome.storage.local.get(['snippets'], (result) => {
+        const updated = result.snippets || [];
+        updated.push(newSnippet);
+        chrome.storage.local.set({ snippets: updated }, () => {
+          // Remove empty state if present
+          const emptyEl = dropdown.querySelector('.empty');
+          if (emptyEl) emptyEl.remove();
+
+          // Add new item to list before the add section
+          const newItem = document.createElement('div');
+          newItem.className = 'item';
+          const newNameEl = document.createElement('span');
+          newNameEl.className = 'snippet-name';
+          newNameEl.textContent = newSnippet.name;
+          newItem.appendChild(newNameEl);
+          newItem.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            insertSnippetIntoTextarea(textarea, newSnippet.content, savedCursor);
+            host.remove();
+            document.removeEventListener('click', closeListener, { capture: true });
+          });
+          dropdown.insertBefore(newItem, addBtn);
+
+          // Reset form, show add button.
+          // Intentionally keep picker open so user can immediately insert the new snippet.
+          addForm.style.display = 'none';
+          addBtn.style.display = '';
+          nameInput.value = '';
+          nameInput.classList.remove('error');
+        });
+      });
+    });
+
+    nameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') saveBtn.click();
+      if (e.key === 'Escape') cancelBtn.click();
+    });
+
+    shadow.appendChild(style);
+    shadow.appendChild(dropdown);
+
+    // Close on click outside
+    let closeListener;
+    closeListener = (e) => {
+      if (!e.composedPath().includes(host)) {
+        host.remove();
+        document.removeEventListener('click', closeListener, { capture: true });
+      }
+    };
+    setTimeout(() => document.addEventListener('click', closeListener, { capture: true }), 0);
+  }
+
+  // ==================== Cheatsheet Panel ====================
+
+  function openCheatsheet(textarea, anchorBtn) {
+    // Toggle: close panel if already open
+    const existing = document.querySelector('.md-sn-cheatsheet-host');
+    if (existing) {
+      existing.remove();
+      return;
+    }
+
+    // Save cursor position before textarea loses focus from click
+    const savedCursor = {
+      start: textarea.selectionStart != null ? textarea.selectionStart : textarea.value.length,
+      end: textarea.selectionEnd != null ? textarea.selectionEnd : textarea.value.length
+    };
+
+    // Shadow host for CSS isolation
+    const host = document.createElement('div');
+    host.className = 'md-sn-cheatsheet-host';
+    document.body.appendChild(host);
+    const shadow = host.attachShadow({ mode: 'open' });
+
+    // Position: fixed, below anchor button; flip upward if near viewport bottom
+    const rect = anchorBtn.getBoundingClientRect();
+    const PANEL_HEIGHT = 420;
+    const top = (rect.bottom + PANEL_HEIGHT > window.innerHeight)
+      ? Math.max(4, rect.top - PANEL_HEIGHT)
+      : rect.bottom + 4;
+    const left = Math.min(rect.left, window.innerWidth - 320);
+
+    const style = document.createElement('style');
+    style.textContent = `
+      .panel {
+        position: fixed;
+        top: ${top}px;
+        left: ${left}px;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        z-index: 9999999;
+        width: 300px;
+        max-height: 420px;
+        display: flex;
+        flex-direction: column;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+      .panel-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 8px 12px;
+        border-bottom: 1px solid #eee;
+        background: #f8f8f8;
+        border-radius: 8px 8px 0 0;
+        flex-shrink: 0;
+      }
+      .panel-header span {
+        font-size: 12px; font-weight: 600; color: #555;
+        text-transform: uppercase; letter-spacing: 0.5px;
+      }
+      .close-btn {
+        background: none; border: none; cursor: pointer;
+        font-size: 14px; color: #999; padding: 0 2px; line-height: 1;
+      }
+      .close-btn:hover { color: #333; }
+      .panel-body { overflow-y: auto; flex: 1; padding: 4px 0; }
+      .category-header {
+        padding: 6px 12px 3px;
+        font-size: 10px; font-weight: 600; color: #999;
+        text-transform: uppercase; letter-spacing: 0.5px;
+      }
+      .item {
+        padding: 5px 12px; cursor: pointer;
+        border-bottom: 1px solid #f5f5f5;
+      }
+      .item:last-of-type { border-bottom: none; }
+      .item:hover { background: #f0f7ff; }
+      .item-code {
+        font-family: 'SF Mono', Consolas, 'Courier New', monospace;
+        font-size: 12px; color: #333;
+      }
+    `;
+
+    const panel = document.createElement('div');
+    panel.className = 'panel';
+
+    // Header
+    const panelHeader = document.createElement('div');
+    panelHeader.className = 'panel-header';
+    const headerSpan = document.createElement('span');
+    headerSpan.textContent = 'Markdown Cheatsheet';
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'close-btn';
+    closeBtn.textContent = '✕';
+    panelHeader.appendChild(headerSpan);
+    panelHeader.appendChild(closeBtn);
+
+    // Body
+    const panelBody = document.createElement('div');
+    panelBody.className = 'panel-body';
+
+    for (const section of CHEATSHEET) {
+      const catHeader = document.createElement('div');
+      catHeader.className = 'category-header';
+      catHeader.textContent = section.category;
+      panelBody.appendChild(catHeader);
+
+      for (const cheatItem of section.items) {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'item';
+        const codeEl = document.createElement('span');
+        codeEl.className = 'item-code';
+        codeEl.textContent = cheatItem.label;
+        itemEl.appendChild(codeEl);
+
+        itemEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          insertSnippetIntoTextarea(textarea, cheatItem.insert, savedCursor);
+          host.remove();
+          document.removeEventListener('keydown', onEsc);
+          document.removeEventListener('click', closeListener, { capture: true });
+        });
+
+        panelBody.appendChild(itemEl);
+      }
+    }
+
+    panel.appendChild(panelHeader);
+    panel.appendChild(panelBody);
+    shadow.appendChild(style);
+    shadow.appendChild(panel);
+
+    // Close helpers
+    const onEsc = (e) => {
+      if (e.key === 'Escape') {
+        host.remove();
+        document.removeEventListener('keydown', onEsc);
+        document.removeEventListener('click', closeListener, { capture: true });
+      }
+    };
+
+    let closeListener;
+    closeListener = (e) => {
+      if (!e.composedPath().includes(host)) {
+        host.remove();
+        document.removeEventListener('keydown', onEsc);
+        document.removeEventListener('click', closeListener, { capture: true });
+      }
+    };
+
+    closeBtn.addEventListener('click', () => {
+      host.remove();
+      document.removeEventListener('keydown', onEsc);
+      document.removeEventListener('click', closeListener, { capture: true });
+    });
+
+    document.addEventListener('keydown', onEsc);
+    setTimeout(() => document.addEventListener('click', closeListener, { capture: true }), 0);
+  }
+
   // ==================== Field injection ====================
 
   // Add toolbar to journal field
@@ -794,8 +1303,9 @@
 
   // Initialize
   async function init() {
-    // Load custom alerts first
+    // Load custom alerts and snippets first
     await loadCustomAlerts();
+    await loadSnippets();
 
     // Load built-in alerts from library for alert picker
     if (typeof markdownServicenow !== 'undefined' && markdownServicenow.getBuiltInAlerts) {

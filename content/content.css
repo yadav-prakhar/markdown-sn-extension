@@ -108,3 +108,29 @@
 .md-sn-restore-btn:active {
   opacity: 0.6;
 }
+
+.md-sn-snippets-btn,
+.md-sn-cheatsheet-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 5px !important;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.md-sn-snippets-btn:hover,
+.md-sn-cheatsheet-btn:hover {
+  opacity: 1;
+}
+
+.md-sn-snippets-btn:active,
+.md-sn-cheatsheet-btn:active {
+  opacity: 0.6;
+}
+

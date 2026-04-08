@@ -45,12 +45,24 @@
         <span class="btn-icon">📋</span>
         Copy to Clipboard
       </button>
+      <button id="saveSnippetQuickBtn" class="btn btn-secondary" disabled title="Save output as snippet">
+        <span class="btn-icon">📌</span>
+        Save Snippet
+      </button>
       <button id="clearBtn" class="btn btn-secondary">
         <span class="btn-icon">🗑️</span>
         Clear
       </button>
     </div>
-    
+
+    <div id="quickSaveForm" class="quick-save-form hidden">
+      <input type="text" id="quickSaveName" placeholder="Snippet name..." maxlength="40" autocomplete="off">
+      <div class="quick-save-actions">
+        <button id="quickSaveConfirmBtn" class="btn btn-primary btn-small">Save</button>
+        <button id="quickSaveCancelBtn" class="btn btn-secondary btn-small">Cancel</button>
+      </div>
+    </div>
+
     <div id="toast" class="toast hidden">
       <span class="toast-icon">✓</span>
       <span class="toast-message">Copied to clipboard!</span>
@@ -60,10 +72,16 @@
     <div id="settingsModal" class="modal hidden">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>Custom Alert Types</h2>
+          <h2>Settings</h2>
           <button id="closeModalBtn" class="close-btn">&times;</button>
         </div>
 
+        <div class="modal-tabs">
+          <button class="modal-tab active" id="tabAlerts">Alerts</button>
+          <button class="modal-tab" id="tabSnippets">Snippets</button>
+        </div>
+
+        <div id="alertsTab">
         <div class="modal-body">
           <div class="alerts-section">
             <h3>Built-in Alerts</h3>
@@ -124,6 +142,37 @@
             </form>
           </div>
         </div>
+        </div><!-- end alertsTab -->
+
+        <div id="snippetsTab" class="hidden">
+          <div class="modal-body">
+            <div class="snippets-section">
+              <h3>Saved Snippets</h3>
+              <div id="snippetsList">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+
+            <div class="snippet-form-section">
+              <h3 id="snippetFormTitle">Add New Snippet</h3>
+              <form id="snippetForm">
+                <input type="hidden" id="editingSnippet" value="">
+                <div class="form-group">
+                  <label for="snippetName">Name</label>
+                  <input type="text" id="snippetName" placeholder="My Template" maxlength="40">
+                </div>
+                <div class="form-group">
+                  <label for="snippetContent">Content</label>
+                  <textarea id="snippetContent" placeholder="Your markdown snippet..." rows="4"></textarea>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" id="saveSnippetBtn" class="btn btn-primary btn-small">Add Snippet</button>
+                  <button type="button" id="cancelSnippetEditBtn" class="btn btn-secondary btn-small hidden">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div><!-- end snippetsTab -->
 
         <div class="modal-footer">
           <button id="importBtn" class="btn btn-secondary btn-small">📥 Import</button>
