@@ -303,10 +303,9 @@
       50% { opacity: 0.6; transform: scale(0.8); }
     }
     .hero-icon {
-      width: 80px; height: 80px;
+      width: 128px; height: 128px;
       border-radius: var(--radius-xl);
       margin: 0 auto var(--space-lg);
-      box-shadow: 0 0 0 1px var(--border), var(--shadow);
     }
     .hero-title {
       font-size: clamp(2.5rem, 7vw, 4rem);
@@ -942,10 +941,11 @@
       font-weight: 700;
       margin-bottom: var(--space-sm);
       display: flex;
-      align-items: center;
+      flex-direction: column;
+      align-items: flex-start;
       gap: var(--space-sm);
     }
-    .footer-brand-name img { width: 20px; height: 20px; border-radius: var(--radius-sm); }
+    .footer-brand-name img { width: 64px; height: 64px; border-radius: var(--radius-sm); }
     .footer-brand-desc { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.6; }
     .footer-col-title {
       font-size: 0.8rem;
@@ -1067,7 +1067,7 @@
       <span class="hero-badge-dot"></span>
       Version 3.0.0 · Free Chrome Extension
     </div>
-    <img src="icons/Icon128.png" alt="Markdown to ServiceNow icon" class="hero-icon" />
+    <img src="icons/Icon.svg" alt="Markdown to ServiceNow icon" class="hero-icon" />
     <h1 class="hero-title">
       Write Markdown,<br/>
       <span class="gradient-text">Post to ServiceNow</span>
@@ -1079,7 +1079,8 @@
     <div class="hero-actions">
       <!-- TODO(user): Replace with actual Chrome Web Store URL after publishing -->
       <a href="#install" class="btn btn-primary btn-lg" id="heroInstallBtn">
-        🛒 Add to Chrome — It's Free
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
+        Add to Chrome — It's Free
       </a>
       <a href="https://github.com/yadav-prakhar/markdown-sn-extension" target="_blank" rel="noopener" class="btn btn-secondary btn-lg">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
@@ -1103,14 +1104,14 @@
         <div class="hero-stat-label">Alert Types</div>
       </div>
       <div class="hero-stat">
-        <div class="hero-stat-value">0</div>
+        <div class="hero-stat-value">No</div>
         <div class="hero-stat-label">Data Collected</div>
       </div>
       <!-- TODO(user): Update install count once published to Chrome Web Store -->
-      <div class="hero-stat">
+      <!-- <div class="hero-stat">
         <div class="hero-stat-value" id="installCount">—</div>
         <div class="hero-stat-label">Active Users</div>
-      </div>
+      </div> -->
     </div>
   </div>
 </section>
@@ -1154,6 +1155,7 @@
         <span class="feature-icon">📌</span>
         <div class="feature-title">Snippets Manager</div>
         <div class="feature-desc">Save reusable Markdown blocks and insert them with a click. Great for standard response templates and boilerplate.</div>
+        <span class="feature-tag">v3.0.0 New</span>
       </div>
       <div class="feature-card">
         <span class="feature-icon">↩️</span>
@@ -1165,6 +1167,7 @@
         <span class="feature-icon">?</span>
         <div class="feature-title">Cheatsheet</div>
         <div class="feature-desc">Built-in Markdown syntax reference, accessible from the toolbar. Click any item to insert the syntax at your cursor.</div>
+        <span class="feature-tag">v3.0.0 New</span>
       </div>
       <div class="feature-card">
         <span class="feature-icon">🔒</span>
@@ -1184,8 +1187,8 @@
     <h2 class="section-title">See it in action</h2>
     <p class="section-subtitle">Click any screenshot to enlarge.</p>
     <div class="screenshots-grid">
-      <div class="screenshot-card" onclick="openLightbox('screenshots/ss1.png', 'Popup Converter Interface')">
-        <img src="screenshots/ss1.png" alt="Popup converter interface" loading="lazy" />
+      <div class="screenshot-card" onclick="openLightbox('screenshots/ss-popup.png', 'Popup Converter Interface')">
+        <img src="screenshots/ss-popup.png" alt="Popup converter interface" loading="lazy" />
         <div class="screenshot-caption">📝 Popup Converter</div>
       </div>
       <div class="screenshot-card" onclick="openLightbox('screenshots/ss2.png', 'Markdown Conversion Example')">
@@ -1196,10 +1199,18 @@
         <img src="screenshots/ssAlerts.png" alt="Alert types showcase" loading="lazy" />
         <div class="screenshot-caption">🎨 Alert Types</div>
       </div>
-    </div>
-    <!-- TODO(user): Add screenshots of the in-page toolbar on a ServiceNow page, the preview modal, and the settings modal. Suggested filenames: ss-toolbar.png, ss-preview.png, ss-settings.png. Place them in docs/screenshots/ and add screenshot-card entries here. -->
-    <div class="todo-callout">
-      <div><strong>TODO (user):</strong> Additional screenshots needed — in-page toolbar on ServiceNow (ss-toolbar.png), preview modal (ss-preview.png), and custom alerts settings (ss-settings.png). Place in <code>docs/screenshots/</code> and add screenshot cards above.</div>
+      <div class="screenshot-card" onclick="openLightbox('screenshots/ss-toolbar.png', 'In-Page Toolbar on ServiceNow')">
+        <img src="screenshots/ss-toolbar.png" alt="In-page toolbar on ServiceNow journal field" loading="lazy" />
+        <div class="screenshot-caption">⚙️ In-Page Toolbar</div>
+      </div>
+      <div class="screenshot-card" onclick="openLightbox('screenshots/ss-preview.png', 'Preview Modal')">
+        <img src="screenshots/ss-preview.png" alt="Preview modal showing rendered output" loading="lazy" />
+        <div class="screenshot-caption">👁️ Preview Modal</div>
+      </div>
+      <div class="screenshot-card" onclick="openLightbox('screenshots/ss-settings.png', 'Custom Alerts Settings')">
+        <img src="screenshots/ss-settings.png" alt="Custom alerts settings panel" loading="lazy" />
+        <div class="screenshot-caption">🛠️ Settings &amp; Custom Alerts</div>
+      </div>
     </div>
   </div>
 </section>
@@ -1548,13 +1559,11 @@ Everything is **on track** for the Thursday release.
           <div style="font-size:2rem; margin-bottom: var(--space-sm);">🛒</div>
           <div style="font-weight:700; font-size:1.1rem; margin-bottom:var(--space-sm);">Ready to install?</div>
           <div style="font-size:0.875rem; color:var(--text-secondary); margin-bottom:var(--space-lg);">Free. No account. No data collection.</div>
-          <!-- TODO(user): Replace href with actual Chrome Web Store URL after publishing the extension -->
           <a href="#" class="btn btn-primary btn-lg" style="width:100%; justify-content:center;">
-            🛒 Add to Chrome — Free
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
+        Add to Chrome — It's Free
           </a>
-          <div class="todo-callout" style="text-align:left; margin-top: var(--space-md);">
-            <div><strong>TODO (user):</strong> Replace the href="#" above with the actual Chrome Web Store install URL once the extension is published. Format: <code>https://chromewebstore.google.com/detail/[extension-id]</code></div>
-          </div>
+          <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:var(--space-sm);">Chrome Web Store listing coming soon</div>
         </div>
       </div>
     </div>
@@ -1713,15 +1722,24 @@ Everything is **on track** for the Thursday release.
         <div style="margin-top: var(--space-md);">
           <span class="version-badge">v3.0.0</span>
         </div>
-        <!-- TODO(user): Add author social links (GitHub, LinkedIn, etc.) if desired -->
-        <div class="todo-callout" style="margin-top: var(--space-md); font-size: 0.8rem;">
-          <div><strong>TODO (user):</strong> Add author social links here (GitHub profile, LinkedIn, etc.) if you want to be credited/reachable.</div>
+        <div style="margin-top: var(--space-md); display: flex; justify-content: space-between; flex-wrap: wrap;">
+          <a href="https://github.com/yadav-prakhar" target="_blank" rel="noopener" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem;" title="GitHub">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:middle; margin-right:4px;"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub
+          </a>
+          <a href="https://www.linkedin.com/in/prakhar-yadav-856772b6/" target="_blank" rel="noopener" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem;" title="LinkedIn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle; margin-right:4px;"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>LinkedIn
+          </a>
+          <a href="https://x.com/CodewithP" target="_blank" rel="noopener" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem;" title="X / Twitter">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle; margin-right:4px;"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.259 5.631 5.905-5.631zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>X
+          </a>
+          <a href="https://prakhar.hashnode.dev/" target="_blank" rel="noopener" style="color: var(--text-secondary); text-decoration: none; font-size: 0.875rem;" title="Hashnode Blog">
+            <svg width="18" height="18" viewBox="0 0 337 337" fill="currentColor" style="vertical-align:middle; margin-right:4px;"><path d="M168.5 0C75.42 0 0 75.42 0 168.5S75.42 337 168.5 337 337 261.58 337 168.5 261.58 0 168.5 0zm.36 245.55a77.05 77.05 0 110-154.1 77.05 77.05 0 010 154.1z"/></svg>Blog
+          </a>
         </div>
       </div>
       <div>
         <div class="footer-col-title">Extension</div>
         <ul class="footer-links">
-          <!-- TODO(user): Replace # with actual Chrome Web Store URL -->
           <li><a href="#">Install from Chrome Web Store</a></li>
           <li><a href="https://github.com/yadav-prakhar/markdown-sn-extension" target="_blank" rel="noopener">GitHub Repository</a></li>
           <li><a href="https://github.com/yadav-prakhar/markdown-sn-extension/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></li>

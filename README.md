@@ -22,9 +22,9 @@ Convert Markdown to ServiceNow journal field format directly in your browser. Wr
 
 ### Output
 
-| <img width="600" alt="screenshot 1" src="screenshots/ss1.png" /> | <img width="600" alt="screenshot 2" src="screenshots/ss2.png" /> |
+| <img width="600" alt="Popup Converter" src="docs/screenshots/ss-popup.png" /> | <img width="600" alt="In-Page Toolbar" src="docs/screenshots/ss-toolbar.png" /> |
 | -- | -- |
-| <img width="600" alt="Alerts" src="screenshots/ssAlerts.png" /> | <img src="icons/Icon.svg" alt="Markdown to ServiceNow" width="600" height="600"> |
+| <img width="600" alt="Preview Modal" src="docs/screenshots/ss-preview.png" /> | <img width="600" alt="Settings & Custom Alerts" src="docs/screenshots/ss-settings.png" /> |
 
 
 ## Installation

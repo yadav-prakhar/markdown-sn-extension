@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Preview Modal** — New 👁 button opens a side-by-side live preview of markdown and rendered output before applying changes
 - **Alert Picker** — New 🔖 button on journal field toolbars lets you insert any built-in or custom alert type at the cursor position
 - **Restore / Undo** — New ↩️ button appears after conversion to restore the original markdown (per-field undo)
+- **Snippets Manager** — Save reusable Markdown blocks and insert them with a click; accessible from both the toolbar (📌 button) and popup
+- **Markdown Cheatsheet** — Built-in syntax reference (? button on toolbar) with click-to-insert support; also available in popup
 - `sanitizeHtml()` helper strips `on*` event handlers and `javascript:` URIs from preview content for XSS safety
 - `debounce()` helper for throttled live preview rendering
 
