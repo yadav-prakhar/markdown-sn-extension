@@ -1,6 +1,6 @@
 # Privacy Policy for Markdown to ServiceNow Extension
 
-**Last Updated:** December 2025
+**Last Updated:** April 2026
 
 ## Overview
 
