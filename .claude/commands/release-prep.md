@@ -2,7 +2,7 @@ Prepare this extension for a new release. Follow these steps in order:
 
 ## 1. Confirm the version
 
-Read `manifest.json` and confirm the `version` field. This is the release version.
+Read `manifest.json` & `package.json` and confirm the `version` field. This is the release version.
 
 ## 2. Run tests
 
