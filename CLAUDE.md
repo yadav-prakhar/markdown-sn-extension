@@ -9,8 +9,8 @@ Project instructions for Claude Code when working with this repository.
 2. **Context menu** - Right-click selected text to convert
 3. **In-page buttons** - Convert buttons on ServiceNow journal fields
 
-**Version:** 3.0.0
-**Library:** markdown-servicenow v1.0.5 (bundled)
+**Version:** 3.0.1
+**Library:** markdown-servicenow v2.0.0 (bundled)
 
 ## Quick Reference
 
@@ -27,8 +27,20 @@ npm run test:watch
 # Run tests with coverage
 npm run test:coverage
 
+# Run only unit tests
+npm run test:unit
+
+# Run only integration tests
+npm run test:integration
+
+# Open Vitest UI (browser-based test runner)
+npm run test:ui
+
 # Run specific test file
 npm test -- tests/unit/lib/markdown-blockquotes.test.js
+
+# Regenerate extension icons
+node scripts/generate-icons.js
 
 # Manually install git hooks
 bash scripts/install-hooks.sh
@@ -77,7 +89,7 @@ bash scripts/install-hooks.sh
 | Component | File | Purpose |
 |-----------|------|---------|
 | **Background Worker** | `background/background.js` | Context menu, message routing |
-| **Content Script** | `content/content.js` | Field detection, toolbar injection, in-place conversion |
+| **Content Script** | `content/content.js` | Field detection, toolbar injection, in-place conversion, preview modal, snippets, undo |
 | **Popup** | `popup/popup.js` | Standalone converter UI |
 | **Library** | `lib/markdown-servicenow.js` | Core markdown conversion logic |
 
@@ -234,6 +246,8 @@ thresholds: {
 3. Click "Load unpacked"
 4. Select the extension root directory
 
+**Keyboard shortcut:** `Ctrl+Shift+M` / `Cmd+Shift+M` opens the popup directly.
+
 ### After Code Changes
 
 1. Make changes to JS/CSS/HTML files
@@ -274,6 +288,12 @@ textarea.dispatchEvent(new Event('change', { bubbles: true }));
 textarea.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
 if (typeof textarea.onchange === 'function') textarea.onchange();
 ```
+
+### Security & Utility Helpers (v3.0.0+)
+
+`sanitizeHtml(html)` — strips `on*` event handlers and `javascript:` URIs from preview content before rendering. Must be called on any user-generated HTML shown in the preview modal.
+
+`debounce(fn, delay)` — used internally to throttle live preview rendering in the popup.
 
 ### Protection System
 
