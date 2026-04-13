@@ -22,6 +22,9 @@ export const markdownSamples = {
 
   // Links and images
   link: '[Link text](https://example.com)',
+  linkWithUnderscoreInUrl: '[API docs](https://myinstance.service-now.com/kb_article.do?sys_id=abc_123)',
+  linkWithUnderscoreInText: '[my_api_docs](https://example.com)',
+  bareUrlWithUnderscores: 'See https://some_api_service.example.com for docs',
   image: '![Alt text](https://example.com/image.png)',
 
   // Blockquotes
