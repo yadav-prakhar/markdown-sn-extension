@@ -1,0 +1,339 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1777271265402,
+  "projectRoot": "/Users/prakhar.yadav/Workspace/Side-Projects/Personal-Projects/markdown-sn-journal/MD-SN-Extension/main",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "vite",
+        "version": "6.0.3",
+        "category": "build"
+      },
+      {
+        "name": "vitest",
+        "version": "2.1.0",
+        "category": "testing"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": "npm test 2>&1",
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {
+      "test": "vitest run",
+      "test:watch": "vitest",
+      "test:ui": "vitest --ui",
+      "test:coverage": "vitest run --coverage",
+      "test:unit": "vitest run tests/unit",
+      "test:integration": "vitest run tests/integration",
+      "prepare": "bash scripts/install-hooks.sh"
+    }
+  },
+  "conventions": {
+    "namingStyle": "camelCase",
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs",
+      "lib",
+      "scripts",
+      "tests"
+    ],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "background": {
+      "path": "background",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1777271265375,
+      "keyFiles": [
+        "background.js"
+      ]
+    },
+    "content": {
+      "path": "content",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1777271265377,
+      "keyFiles": [
+        "content.css",
+        "content.js"
+      ]
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 4,
+      "lastAccessed": 1777271265393,
+      "keyFiles": [
+        "index.html",
+        "test-setup.md"
+      ]
+    },
+    "icons": {
+      "path": "icons",
+      "purpose": null,
+      "fileCount": 7,
+      "lastAccessed": 1777271265394,
+      "keyFiles": [
+        "Icon.svg",
+        "Icon128.png",
+        "Icon16.png",
+        "Icon32.png",
+        "Icon48.png"
+      ]
+    },
+    "lib": {
+      "path": "lib",
+      "purpose": "Library code",
+      "fileCount": 1,
+      "lastAccessed": 1777271265395,
+      "keyFiles": [
+        "markdown-servicenow.js"
+      ]
+    },
+    "popup": {
+      "path": "popup",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1777271265395,
+      "keyFiles": [
+        "popup.css",
+        "popup.html",
+        "popup.js"
+      ]
+    },
+    "screenshots": {
+      "path": "screenshots",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1777271265395,
+      "keyFiles": [
+        "ss1.png",
+        "ss2.png",
+        "ssAlerts.png"
+      ]
+    },
+    "scripts": {
+      "path": "scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 2,
+      "lastAccessed": 1777271265395,
+      "keyFiles": [
+        "generate-icons.js",
+        "install-hooks.sh"
+      ]
+    },
+    "tests": {
+      "path": "tests",
+      "purpose": "Test files",
+      "fileCount": 0,
+      "lastAccessed": 1777271265396,
+      "keyFiles": []
+    },
+    "docs/lib": {
+      "path": "docs/lib",
+      "purpose": "Library code",
+      "fileCount": 1,
+      "lastAccessed": 1777271265397,
+      "keyFiles": [
+        "markdown-servicenow.js"
+      ]
+    },
+    "tests/fixtures": {
+      "path": "tests/fixtures",
+      "purpose": "Test fixtures",
+      "fileCount": 1,
+      "lastAccessed": 1777271265398,
+      "keyFiles": [
+        "markdown-samples.js"
+      ]
+    },
+    "tests/mocks": {
+      "path": "tests/mocks",
+      "purpose": "Mock data",
+      "fileCount": 1,
+      "lastAccessed": 1777271265399,
+      "keyFiles": [
+        "chrome-api.js"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "content/content.js",
+      "accessCount": 78,
+      "lastAccessed": 1777274436666,
+      "type": "file"
+    },
+    {
+      "path": "popup/popup.js",
+      "accessCount": 45,
+      "lastAccessed": 1777273417334,
+      "type": "file"
+    },
+    {
+      "path": "content/content.css",
+      "accessCount": 27,
+      "lastAccessed": 1777272859551,
+      "type": "file"
+    },
+    {
+      "path": "lib/markdown-servicenow.js",
+      "accessCount": 23,
+      "lastAccessed": 1775658641667,
+      "type": "file"
+    },
+    {
+      "path": "manifest.json",
+      "accessCount": 21,
+      "lastAccessed": 1777276129721,
+      "type": "file"
+    },
+    {
+      "path": "popup/popup.css",
+      "accessCount": 18,
+      "lastAccessed": 1777272859602,
+      "type": "file"
+    },
+    {
+      "path": "popup/popup.html",
+      "accessCount": 17,
+      "lastAccessed": 1777272859072,
+      "type": "file"
+    },
+    {
+      "path": "",
+      "accessCount": 17,
+      "lastAccessed": 1777276122715,
+      "type": "directory"
+    },
+    {
+      "path": "docs/index.html",
+      "accessCount": 16,
+      "lastAccessed": 1776064617884,
+      "type": "file"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "accessCount": 11,
+      "lastAccessed": 1777276128228,
+      "type": "file"
+    },
+    {
+      "path": "README.md",
+      "accessCount": 9,
+      "lastAccessed": 1776064612321,
+      "type": "file"
+    },
+    {
+      "path": "CLAUDE.md",
+      "accessCount": 9,
+      "lastAccessed": 1776064618973,
+      "type": "file"
+    },
+    {
+      "path": "tests/unit/content/toolbar-injection.test.js",
+      "accessCount": 6,
+      "lastAccessed": 1775653017503,
+      "type": "file"
+    },
+    {
+      "path": "package.json",
+      "accessCount": 5,
+      "lastAccessed": 1777274903750,
+      "type": "file"
+    },
+    {
+      "path": ".claude/commands/release-prep.md",
+      "accessCount": 4,
+      "lastAccessed": 1775676322582,
+      "type": "file"
+    },
+    {
+      "path": "background/background.js",
+      "accessCount": 3,
+      "lastAccessed": 1775658233649,
+      "type": "file"
+    },
+    {
+      "path": "vitest.config.js",
+      "accessCount": 2,
+      "lastAccessed": 1776059216523,
+      "type": "file"
+    },
+    {
+      "path": "tests/unit/content/field-detection.test.js",
+      "accessCount": 1,
+      "lastAccessed": 1775645306705,
+      "type": "file"
+    },
+    {
+      "path": "tests/setup/vitest.setup.js",
+      "accessCount": 1,
+      "lastAccessed": 1775645313487,
+      "type": "file"
+    },
+    {
+      "path": "tests",
+      "accessCount": 1,
+      "lastAccessed": 1775652914475,
+      "type": "directory"
+    },
+    {
+      "path": "content",
+      "accessCount": 1,
+      "lastAccessed": 1775657747815,
+      "type": "directory"
+    },
+    {
+      "path": "PRIVACY_POLICY.md",
+      "accessCount": 1,
+      "lastAccessed": 1775658241331,
+      "type": "file"
+    },
+    {
+      "path": "docs/test-setup.md",
+      "accessCount": 1,
+      "lastAccessed": 1775658622805,
+      "type": "file"
+    },
+    {
+      "path": ".claude/commands/release.md",
+      "accessCount": 1,
+      "lastAccessed": 1775676338658,
+      "type": "file"
+    },
+    {
+      "path": "popup",
+      "accessCount": 1,
+      "lastAccessed": 1777273405557,
+      "type": "directory"
+    }
+  ],
+  "userDirectives": []
+}
