@@ -464,10 +464,12 @@
       .preview-content hr { border: none; border-top: 1px solid #eee; margin: 8px 0; }
       .preview-content a { color: #0066cc; }
       .footer {
-        display: flex; justify-content: flex-end; gap: 8px;
+        display: flex; justify-content: space-between; align-items: center; gap: 8px;
         padding: 10px 16px; border-top: 1px solid #e0e0e0; background: #f8f8f8;
         flex-shrink: 0;
       }
+      .footer-left { display: flex; align-items: center; gap: 8px; }
+      .footer-right { display: flex; align-items: center; gap: 8px; }
       .btn {
         padding: 7px 16px; border-radius: 5px; border: none;
         cursor: pointer; font-size: 13px; font-weight: 500;
@@ -476,6 +478,32 @@
       .btn-cancel:hover { background: #e0e0e0; }
       .btn-apply { background: #0066cc; color: white; }
       .btn-apply:hover { background: #0052a3; }
+      .btn-save-snippet {
+        padding: 7px 14px; border-radius: 5px;
+        border: 1.5px solid #0066cc; background: transparent;
+        color: #0066cc; cursor: pointer; font-size: 13px; font-weight: 500;
+      }
+      .btn-save-snippet:hover { background: #e8f0fe; }
+      .snippet-name-prompt {
+        display: none; align-items: center; gap: 6px;
+      }
+      .snippet-name-prompt input {
+        padding: 6px 10px; border: 1.5px solid #ddd; border-radius: 5px;
+        font-size: 13px; outline: none; width: 180px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+      .snippet-name-prompt input:focus { border-color: #0066cc; }
+      .snippet-name-prompt input.error { border-color: #e53935; }
+      .snippet-name-prompt .confirm-btn {
+        padding: 6px 10px; border: none; border-radius: 5px;
+        background: #0066cc; color: #fff; cursor: pointer; font-size: 13px;
+      }
+      .snippet-name-prompt .confirm-btn:hover { background: #0052a3; }
+      .snippet-name-prompt .dismiss-btn {
+        padding: 6px 8px; border: none; border-radius: 5px;
+        background: #f0f0f0; color: #555; cursor: pointer; font-size: 13px;
+      }
+      .snippet-name-prompt .dismiss-btn:hover { background: #e0e0e0; }
     `;
 
     const overlay = document.createElement('div');
@@ -527,14 +555,53 @@
     // Footer
     const footer = document.createElement('div');
     footer.className = 'footer';
+
+    const footerLeft = document.createElement('div');
+    footerLeft.className = 'footer-left';
+
+    const saveMdBtn = document.createElement('button');
+    saveMdBtn.className = 'btn-save-snippet';
+    saveMdBtn.textContent = 'Save MD Snippet';
+
+    const saveConvertedBtn = document.createElement('button');
+    saveConvertedBtn.className = 'btn-save-snippet';
+    saveConvertedBtn.textContent = 'Save Converted Snippet';
+
+    const namePrompt = document.createElement('div');
+    namePrompt.className = 'snippet-name-prompt';
+    const namePromptInput = document.createElement('input');
+    namePromptInput.type = 'text';
+    namePromptInput.placeholder = 'Snippet name...';
+    namePromptInput.maxLength = 40;
+    const confirmBtn = document.createElement('button');
+    confirmBtn.className = 'confirm-btn';
+    confirmBtn.textContent = '✓';
+    confirmBtn.title = 'Save snippet';
+    const dismissBtn = document.createElement('button');
+    dismissBtn.className = 'dismiss-btn';
+    dismissBtn.textContent = '✗';
+    dismissBtn.title = 'Cancel';
+    namePrompt.appendChild(namePromptInput);
+    namePrompt.appendChild(confirmBtn);
+    namePrompt.appendChild(dismissBtn);
+
+    footerLeft.appendChild(saveMdBtn);
+    footerLeft.appendChild(saveConvertedBtn);
+    footerLeft.appendChild(namePrompt);
+
+    const footerRight = document.createElement('div');
+    footerRight.className = 'footer-right';
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'btn btn-cancel';
     cancelBtn.textContent = 'Cancel';
     const applyBtn = document.createElement('button');
     applyBtn.className = 'btn btn-apply';
     applyBtn.textContent = 'Apply';
-    footer.appendChild(cancelBtn);
-    footer.appendChild(applyBtn);
+    footerRight.appendChild(cancelBtn);
+    footerRight.appendChild(applyBtn);
+
+    footer.appendChild(footerLeft);
+    footer.appendChild(footerRight);
 
     container.appendChild(header);
     container.appendChild(body);
@@ -599,6 +666,68 @@
       } catch (err) {
         showNotification('Error: ' + err.message, 'error');
       }
+    });
+
+    // Save snippet from preview modal — inline name-prompt logic
+    let pendingSnippetContent = null;
+
+    function showNamePrompt(content) {
+      pendingSnippetContent = content;
+      saveMdBtn.style.display = 'none';
+      saveConvertedBtn.style.display = 'none';
+      namePrompt.style.display = 'flex';
+      namePromptInput.value = '';
+      namePromptInput.classList.remove('error');
+      namePromptInput.focus();
+    }
+
+    function hideNamePrompt() {
+      namePrompt.style.display = 'none';
+      saveMdBtn.style.display = '';
+      saveConvertedBtn.style.display = '';
+      pendingSnippetContent = null;
+    }
+
+    saveMdBtn.addEventListener('click', () => showNamePrompt(leftTextarea.value));
+
+    saveConvertedBtn.addEventListener('click', () => {
+      let content = leftTextarea.value;
+      if (typeof markdownServicenow !== 'undefined') {
+        try {
+          content = markdownServicenow.convertMarkdownToServiceNow(
+            leftTextarea.value, { customAlerts }
+          );
+        } catch { /* fall back to raw markdown */ }
+      }
+      showNamePrompt(content);
+    });
+
+    confirmBtn.addEventListener('click', () => {
+      const name = namePromptInput.value.trim();
+      if (!name) {
+        namePromptInput.classList.add('error');
+        namePromptInput.focus();
+        return;
+      }
+      if (confirmBtn.disabled) return;
+      confirmBtn.disabled = true;
+      const newSnippet = { id: Date.now().toString(), name, content: pendingSnippetContent };
+      chrome.storage.local.get(['snippets'], (result) => {
+        const updated = result.snippets || [];
+        updated.push(newSnippet);
+        chrome.storage.local.set({ snippets: updated }, () => {
+          showNotification('Snippet saved!', 'success');
+          hideNamePrompt();
+          confirmBtn.disabled = false;
+        });
+      });
+    });
+
+    dismissBtn.addEventListener('click', hideNamePrompt);
+
+    namePromptInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') confirmBtn.click();
+      if (e.key === 'Escape') { e.stopPropagation(); dismissBtn.click(); }
     });
 
     // Focus left textarea
@@ -767,7 +896,7 @@
     const top = (rect.bottom + DROPDOWN_HEIGHT > window.innerHeight)
       ? Math.max(4, rect.top - DROPDOWN_HEIGHT)
       : rect.bottom + 4;
-    const left = Math.min(rect.left, window.innerWidth - 200);
+    const left = Math.min(rect.left, window.innerWidth - 330);
 
     const style = document.createElement('style');
     style.textContent = `
@@ -780,20 +909,26 @@
         border-radius: 6px;
         box-shadow: 0 4px 16px rgba(0,0,0,0.15);
         z-index: 9999999;
-        min-width: 180px;
+        min-width: 320px;
         max-height: 280px;
         overflow-y: auto;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       }
       .item {
-        display: flex; align-items: center;
+        display: flex; align-items: center; justify-content: space-between;
         padding: 8px 12px; cursor: pointer;
         font-size: 13px; color: #333;
         border-bottom: 1px solid #f0f0f0;
       }
       .item:last-child { border-bottom: none; }
       .item:hover { background: #f5f5f5; }
-      .snippet-name { font-weight: 500; }
+      .snippet-name { font-weight: 500; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .delete-btn {
+        background: none; border: none; cursor: pointer;
+        color: #e53935; font-size: 15px; padding: 2px 5px;
+        border-radius: 3px; line-height: 1; flex-shrink: 0; margin-left: 8px;
+      }
+      .delete-btn:hover { background: #fdecea; }
       .empty {
         padding: 12px; font-size: 13px; color: #999;
         font-style: italic; text-align: center;
@@ -842,6 +977,49 @@
     const dropdown = document.createElement('div');
     dropdown.className = 'dropdown';
 
+    function makeSnippetItem(snippet) {
+      const item = document.createElement('div');
+      item.className = 'item';
+
+      const nameEl = document.createElement('span');
+      nameEl.className = 'snippet-name';
+      nameEl.textContent = snippet.name || snippet.title || 'Snippet';
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'delete-btn';
+      delBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M9 3v1H4v2h1v13a2 2 0 002 2h10a2 2 0 002-2V6h1V4h-5V3H9zm0 5h2v9H9V8zm4 0h2v9h-2V8z"/></svg>';
+      delBtn.title = 'Delete snippet';
+
+      item.appendChild(nameEl);
+      item.appendChild(delBtn);
+
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        insertSnippetIntoTextarea(textarea, snippet.content, savedCursor);
+        host.remove();
+        document.removeEventListener('click', closeListener, { capture: true });
+      });
+
+      delBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        chrome.storage.local.get(['snippets'], (res) => {
+          const updated = (res.snippets || []).filter(s => s.id !== snippet.id);
+          chrome.storage.local.set({ snippets: updated }, () => {
+            item.remove();
+            const remaining = dropdown.querySelectorAll('.item');
+            if (remaining.length === 0) {
+              const emptyEl = document.createElement('div');
+              emptyEl.className = 'empty';
+              emptyEl.textContent = 'No snippets saved';
+              dropdown.insertBefore(emptyEl, addBtn);
+            }
+          });
+        });
+      });
+
+      return item;
+    }
+
     if (snippets.length === 0) {
       const emptyEl = document.createElement('div');
       emptyEl.className = 'empty';
@@ -849,21 +1027,7 @@
       dropdown.appendChild(emptyEl);
     } else {
       for (const snippet of snippets) {
-        const item = document.createElement('div');
-        item.className = 'item';
-        const nameEl = document.createElement('span');
-        nameEl.className = 'snippet-name';
-        nameEl.textContent = snippet.name || snippet.title || 'Snippet';
-        item.appendChild(nameEl);
-
-        item.addEventListener('click', (e) => {
-          e.stopPropagation();
-          insertSnippetIntoTextarea(textarea, snippet.content, savedCursor);
-          host.remove();
-          document.removeEventListener('click', closeListener, { capture: true });
-        });
-
-        dropdown.appendChild(item);
+        dropdown.appendChild(makeSnippetItem(snippet));
       }
     }
 
@@ -939,19 +1103,7 @@
           if (emptyEl) emptyEl.remove();
 
           // Add new item to list before the add section
-          const newItem = document.createElement('div');
-          newItem.className = 'item';
-          const newNameEl = document.createElement('span');
-          newNameEl.className = 'snippet-name';
-          newNameEl.textContent = newSnippet.name;
-          newItem.appendChild(newNameEl);
-          newItem.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            insertSnippetIntoTextarea(textarea, newSnippet.content, savedCursor);
-            host.remove();
-            document.removeEventListener('click', closeListener, { capture: true });
-          });
-          dropdown.insertBefore(newItem, addBtn);
+          dropdown.insertBefore(makeSnippetItem(newSnippet), addBtn);
 
           // Reset form, show add button.
           // Intentionally keep picker open so user can immediately insert the new snippet.

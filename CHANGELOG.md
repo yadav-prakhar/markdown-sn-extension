@@ -5,6 +5,14 @@ All notable changes to the "Markdown to ServiceNow" extension will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2026-04-27
+
+### Added
+
+- **Save as Snippet from Preview** — "Save MD Snippet" and "Save Converted Snippet" buttons in the preview modal footer let you save either the raw markdown or converted output directly as a reusable snippet
+- **Delete Snippets from Picker** — each snippet in the snippet picker dropdown now has a delete (🗑) button to remove it without opening the snippets manager
+- Refactored snippet item rendering into a shared `makeSnippetItem()` helper; snippet picker min-width increased to 320px for better readability
+
 ## [3.0.1] - 2026-04-13
 
 ### Fixed
