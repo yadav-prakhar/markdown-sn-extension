@@ -1478,4 +1478,8 @@
   }
 
   init();
+
+  if (typeof globalThis !== 'undefined') {
+    globalThis.__mdSn_content = { isJournalField, sanitizeHtml, debounce, createConvertButton, createPreviewButton, createAlertPickerButton, createRestoreButton, createSnippetsButton, createCheatsheetButton, createToolbar, showRestoreButton, hideRestoreButton, convertTextarea, restoreMarkdown, showNotification, openPreviewModal, openAlertPicker, openSnippetPicker, openCheatsheet, insertAlertIntoTextarea, insertSnippetIntoTextarea, addToolbarToField, enhanceJournalFields, observeDOM };
+  }
 })();

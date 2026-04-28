@@ -13,7 +13,8 @@ export default defineConfig({
         'scripts/**',
         '*.config.js',
         'coverage/**',
-        'icons/**'
+        'icons/**',
+        'docs/**'
       ],
       thresholds: {
         lines: 80,

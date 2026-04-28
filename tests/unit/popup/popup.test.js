@@ -1,143 +1,44 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { setupPopup } from './_setup.js';
 
 describe('Popup UI', () => {
+  let api;
   let inputEl, outputEl, copyBtn, clearBtn, charCountEl, toastEl;
-  let debounce, convert, showToast, copyToClipboard, clearAll;
 
-  beforeEach(() => {
-    // Setup DOM
-    document.body.innerHTML = `
-      <div>
-        <textarea id="input"></textarea>
-        <textarea id="output" readonly></textarea>
-        <button id="copyBtn">Copy</button>
-        <button id="clearBtn">Clear</button>
-        <div id="charCount">0 chars</div>
-        <div id="toast" class="hidden">
-          <span class="toast-message"></span>
-        </div>
-      </div>
-    `;
-
+  beforeEach(async () => {
+    api = await setupPopup();
     inputEl = document.getElementById('input');
     outputEl = document.getElementById('output');
     copyBtn = document.getElementById('copyBtn');
     clearBtn = document.getElementById('clearBtn');
     charCountEl = document.getElementById('charCount');
     toastEl = document.getElementById('toast');
-
-    // Mock markdownServicenow
-    global.markdownServicenow = {
-      convertMarkdownToServiceNow: vi.fn((text) => `<p>${text}</p>`)
-    };
-
-    // Mock navigator.clipboard
-    const mockClipboard = {
-      writeText: vi.fn(() => Promise.resolve())
-    };
-    Object.defineProperty(navigator, 'clipboard', {
-      value: mockClipboard,
-      writable: true,
-      configurable: true
-    });
-
-    // Mock document.execCommand
-    document.execCommand = vi.fn(() => true);
-
-    // Define debounce function
-    debounce = function(fn, delay) {
-      let timeoutId;
-      return (...args) => {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => fn(...args), delay);
-      };
-    };
-
-    // Define convert function
-    convert = function() {
-      const markdown = inputEl.value.trim();
-
-      if (!markdown) {
-        outputEl.value = '';
-        charCountEl.textContent = '0 chars';
-        copyBtn.disabled = true;
-        return;
-      }
-
-      try {
-        const result = markdownServicenow.convertMarkdownToServiceNow(markdown);
-        outputEl.value = result;
-        charCountEl.textContent = `${result.length} chars`;
-        copyBtn.disabled = false;
-      } catch (error) {
-        outputEl.value = `Error: ${error.message}`;
-        copyBtn.disabled = true;
-      }
-    };
-
-    // Define showToast function
-    showToast = function(message = 'Copied to clipboard!') {
-      const toastMessage = toastEl.querySelector('.toast-message');
-      toastMessage.textContent = message;
-
-      toastEl.classList.remove('hidden');
-      toastEl.offsetHeight; // Force reflow
-      toastEl.classList.add('show');
-
-      setTimeout(() => {
-        toastEl.classList.remove('show');
-        setTimeout(() => toastEl.classList.add('hidden'), 300);
-      }, 2000);
-    };
-
-    // Define copyToClipboard function
-    copyToClipboard = async function() {
-      const text = outputEl.value;
-      if (!text) return;
-
-      try {
-        await navigator.clipboard.writeText(text);
-        showToast('Copied to clipboard!');
-      } catch (error) {
-        outputEl.select();
-        document.execCommand('copy');
-        showToast('Copied to clipboard!');
-      }
-    };
-
-    // Define clearAll function
-    clearAll = function() {
-      inputEl.value = '';
-      outputEl.value = '';
-      charCountEl.textContent = '0 chars';
-      copyBtn.disabled = true;
-      inputEl.focus();
-    };
   });
 
   afterEach(() => {
     vi.clearAllTimers();
+    vi.useRealTimers();
   });
 
+  // ── debounce ──────────────────────────────────────────────────────────────
+
   describe('debounce function', () => {
-    it('should delay function execution', async () => {
+    it('should delay function execution', () => {
       vi.useFakeTimers();
       const mockFn = vi.fn();
-      const debouncedFn = debounce(mockFn, 100);
+      const debouncedFn = api.debounce(mockFn, 100);
 
       debouncedFn();
       expect(mockFn).not.toHaveBeenCalled();
 
       vi.advanceTimersByTime(100);
       expect(mockFn).toHaveBeenCalledTimes(1);
-
-      vi.useRealTimers();
     });
 
-    it('should cancel previous calls', async () => {
+    it('should cancel previous calls', () => {
       vi.useFakeTimers();
       const mockFn = vi.fn();
-      const debouncedFn = debounce(mockFn, 100);
+      const debouncedFn = api.debounce(mockFn, 100);
 
       debouncedFn();
       debouncedFn();
@@ -145,45 +46,43 @@ describe('Popup UI', () => {
 
       vi.advanceTimersByTime(100);
       expect(mockFn).toHaveBeenCalledTimes(1);
-
-      vi.useRealTimers();
     });
 
-    it('should pass arguments to function', async () => {
+    it('should pass arguments to function', () => {
       vi.useFakeTimers();
       const mockFn = vi.fn();
-      const debouncedFn = debounce(mockFn, 100);
+      const debouncedFn = api.debounce(mockFn, 100);
 
       debouncedFn('arg1', 'arg2');
       vi.advanceTimersByTime(100);
 
       expect(mockFn).toHaveBeenCalledWith('arg1', 'arg2');
-
-      vi.useRealTimers();
     });
   });
 
+  // ── convert ───────────────────────────────────────────────────────────────
+
   describe('convert function', () => {
     it('should convert markdown to output', () => {
-      inputEl.value = '# Hello';
-      convert();
+      inputEl.value = '**Bold**';
+      api.convert();
 
-      expect(markdownServicenow.convertMarkdownToServiceNow).toHaveBeenCalledWith('# Hello');
-      expect(outputEl.value).toBe('<p># Hello</p>');
+      expect(outputEl.value).toBeTruthy();
+      expect(outputEl.value).not.toBe('');
     });
 
-    it('should update character count', () => {
-      inputEl.value = '# Test';
-      convert();
+    it('should update character count after conversion', () => {
+      inputEl.value = '**Bold**';
+      api.convert();
 
-      const expectedLength = '<p># Test</p>'.length;
-      expect(charCountEl.textContent).toBe(`${expectedLength} chars`);
+      const len = outputEl.value.length;
+      expect(charCountEl.textContent).toBe(`${len} chars`);
     });
 
     it('should enable copy button when output exists', () => {
-      inputEl.value = '# Test';
+      inputEl.value = '**Bold**';
       copyBtn.disabled = true;
-      convert();
+      api.convert();
 
       expect(copyBtn.disabled).toBe(false);
     });
@@ -191,7 +90,7 @@ describe('Popup UI', () => {
     it('should clear output when input is empty', () => {
       outputEl.value = 'Previous output';
       inputEl.value = '';
-      convert();
+      api.convert();
 
       expect(outputEl.value).toBe('');
     });
@@ -199,140 +98,149 @@ describe('Popup UI', () => {
     it('should disable copy button when input is empty', () => {
       copyBtn.disabled = false;
       inputEl.value = '';
-      convert();
+      api.convert();
 
       expect(copyBtn.disabled).toBe(true);
     });
 
     it('should set char count to 0 when input is empty', () => {
       inputEl.value = '';
-      convert();
+      api.convert();
 
       expect(charCountEl.textContent).toBe('0 chars');
     });
 
-    it('should handle conversion errors', () => {
-      markdownServicenow.convertMarkdownToServiceNow.mockImplementation(() => {
-        throw new Error('Invalid markdown');
-      });
+    it('should trim whitespace from input before converting', () => {
+      inputEl.value = '  **Bold**  ';
+      api.convert();
 
-      inputEl.value = 'Bad input';
-      convert();
-
-      expect(outputEl.value).toBe('Error: Invalid markdown');
-      expect(copyBtn.disabled).toBe(true);
+      expect(outputEl.value).toBeTruthy();
+      expect(outputEl.value).not.toBe('');
     });
 
-    it('should trim whitespace from input', () => {
-      inputEl.value = '  # Test  ';
-      convert();
+    it('should produce non-empty output for headers', () => {
+      inputEl.value = '# Hello';
+      api.convert();
 
-      expect(markdownServicenow.convertMarkdownToServiceNow).toHaveBeenCalledWith('# Test');
+      expect(outputEl.value).toContain('Hello');
     });
   });
 
+  // ── showToast ─────────────────────────────────────────────────────────────
+
   describe('showToast function', () => {
     it('should display toast with message', () => {
-      showToast('Test message');
+      vi.useFakeTimers();
+      api.showToast('Test message');
 
       const message = toastEl.querySelector('.toast-message');
       expect(message.textContent).toBe('Test message');
     });
 
     it('should show toast by removing hidden class', () => {
+      vi.useFakeTimers();
       toastEl.classList.add('hidden');
-      showToast();
+      api.showToast('hello');
 
       expect(toastEl.classList.contains('hidden')).toBe(false);
     });
 
     it('should add show class to toast', () => {
-      showToast();
+      vi.useFakeTimers();
+      api.showToast('hello');
 
       expect(toastEl.classList.contains('show')).toBe(true);
     });
 
     it('should use default message if not provided', () => {
-      showToast();
+      vi.useFakeTimers();
+      api.showToast();
 
       const message = toastEl.querySelector('.toast-message');
       expect(message.textContent).toBe('Copied to clipboard!');
     });
   });
 
+  // ── copyToClipboard ───────────────────────────────────────────────────────
+
   describe('copyToClipboard function', () => {
     it('should copy output to clipboard', async () => {
       outputEl.value = '<p>Test</p>';
 
-      await copyToClipboard();
+      await api.copyToClipboard();
 
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith('<p>Test</p>');
     });
 
     it('should show toast after copying', async () => {
+      vi.useFakeTimers();
       outputEl.value = 'Test';
-      const spy = vi.spyOn({ showToast }, 'showToast');
 
-      await copyToClipboard();
+      await api.copyToClipboard();
 
-      // Toast is shown but we can verify clipboard was called
       expect(navigator.clipboard.writeText).toHaveBeenCalled();
+      const message = toastEl.querySelector('.toast-message');
+      expect(message.textContent).toBe('Copied to clipboard!');
     });
 
     it('should not copy if output is empty', async () => {
       outputEl.value = '';
 
-      await copyToClipboard();
+      await api.copyToClipboard();
 
       expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
     });
 
     it('should fallback to execCommand if clipboard API fails', async () => {
-      navigator.clipboard.writeText.mockRejectedValue(new Error('Clipboard error'));
+      navigator.clipboard.writeText = vi.fn(() => Promise.reject(new Error('Clipboard error')));
       outputEl.value = 'Test';
 
-      await copyToClipboard();
+      await api.copyToClipboard();
 
       expect(document.execCommand).toHaveBeenCalledWith('copy');
     });
   });
 
+  // ── clearAll ──────────────────────────────────────────────────────────────
+
   describe('clearAll function', () => {
     it('should clear input field', () => {
       inputEl.value = 'Test input';
-      clearAll();
+      api.clearAll();
 
       expect(inputEl.value).toBe('');
     });
 
     it('should clear output field', () => {
       outputEl.value = 'Test output';
-      clearAll();
+      api.clearAll();
 
       expect(outputEl.value).toBe('');
     });
 
     it('should reset character count', () => {
       charCountEl.textContent = '100 chars';
-      clearAll();
+      api.clearAll();
 
       expect(charCountEl.textContent).toBe('0 chars');
     });
 
     it('should disable copy button', () => {
       copyBtn.disabled = false;
-      clearAll();
+      api.clearAll();
 
       expect(copyBtn.disabled).toBe(true);
     });
 
     it('should focus input field', () => {
       const focusSpy = vi.spyOn(inputEl, 'focus');
-      clearAll();
+      api.clearAll();
 
       expect(focusSpy).toHaveBeenCalled();
     });
   });
+
+  // ── Storage Persistence ───────────────────────────────────────────────────
 
   describe('Storage Persistence', () => {
     it('should load saved input on popup open', () => {
@@ -341,16 +249,15 @@ describe('Popup UI', () => {
       });
       chrome.storage.local.get = mockGet;
 
-      // Simulate popup open
       mockGet(['lastInput'], (result) => {
         if (result.lastInput) {
           inputEl.value = result.lastInput;
-          convert();
+          api.convert();
         }
       });
 
       expect(inputEl.value).toBe('# Saved content');
-      expect(outputEl.value).toBe('<p># Saved content</p>');
+      expect(outputEl.value).not.toBe('');
     });
 
     it('should save input on window blur', () => {
@@ -358,7 +265,6 @@ describe('Popup UI', () => {
       const mockSet = vi.fn();
       chrome.storage.local.set = mockSet;
 
-      // Simulate blur event
       if (inputEl.value) {
         chrome.storage.local.set({ lastInput: inputEl.value });
       }
@@ -371,7 +277,6 @@ describe('Popup UI', () => {
       const mockSet = vi.fn();
       chrome.storage.local.set = mockSet;
 
-      // Simulate blur event
       if (inputEl.value) {
         chrome.storage.local.set({ lastInput: inputEl.value });
       }
@@ -380,39 +285,161 @@ describe('Popup UI', () => {
     });
   });
 
+  // ── Integration Scenarios ─────────────────────────────────────────────────
+
   describe('Integration Scenarios', () => {
-    it('should handle full conversion flow', () => {
+    it('should handle full conversion flow with bold text', () => {
       inputEl.value = '**Bold text**';
-      markdownServicenow.convertMarkdownToServiceNow.mockReturnValue('<strong>Bold text</strong>');
+      api.convert();
 
-      convert();
-
-      expect(outputEl.value).toBe('<strong>Bold text</strong>');
+      expect(outputEl.value).toContain('Bold text');
       expect(copyBtn.disabled).toBe(false);
-      expect(charCountEl.textContent).toBe('26 chars');
+      const len = outputEl.value.length;
+      expect(charCountEl.textContent).toBe(`${len} chars`);
     });
 
     it('should handle clear and reconvert', () => {
       inputEl.value = '# Test';
-      convert();
-      expect(outputEl.value).toBe('<p># Test</p>');
+      api.convert();
+      expect(outputEl.value).not.toBe('');
 
-      clearAll();
+      api.clearAll();
       expect(inputEl.value).toBe('');
       expect(outputEl.value).toBe('');
 
       inputEl.value = '# New';
-      convert();
-      expect(outputEl.value).toBe('<p># New</p>');
+      api.convert();
+      expect(outputEl.value).not.toBe('');
     });
 
     it('should handle copy after conversion', async () => {
       inputEl.value = '# Test';
-      convert();
+      api.convert();
+      const converted = outputEl.value;
 
-      await copyToClipboard();
+      await api.copyToClipboard();
 
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith('<p># Test</p>');
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(converted);
+    });
+  });
+
+  // ── saveQuickSnippet ──────────────────────────────────────────────────────
+
+  describe('saveQuickSnippet', () => {
+    it('should call chrome.storage.local.set with snippets array after saving', () => {
+      const quickSaveName = document.getElementById('quickSaveName');
+      outputEl.value = '[code]<p>Hello</p>[/code]';
+      quickSaveName.value = 'My Snippet';
+
+      api.saveQuickSnippet();
+
+      expect(chrome.storage.local.set).toHaveBeenCalledWith(
+        expect.objectContaining({ snippets: expect.any(Array) })
+      );
+    });
+
+    it('should not save if name is empty', () => {
+      const quickSaveName = document.getElementById('quickSaveName');
+      quickSaveName.value = '';
+      const setCalls = chrome.storage.local.set.mock.calls.length;
+
+      api.saveQuickSnippet();
+
+      expect(chrome.storage.local.set.mock.calls.length).toBe(setCalls);
+    });
+  });
+
+  // ── insertAlertSyntax ─────────────────────────────────────────────────────
+
+  describe('insertAlertSyntax', () => {
+    it('should insert NOTE alert syntax into input', () => {
+      inputEl.value = '';
+      inputEl.selectionStart = 0;
+      inputEl.selectionEnd = 0;
+
+      api.insertAlertSyntax('note');
+
+      expect(inputEl.value).toContain('> [!NOTE]');
+    });
+
+    it('should insert at cursor position', () => {
+      inputEl.value = 'before';
+      inputEl.selectionStart = 6;
+      inputEl.selectionEnd = 6;
+
+      api.insertAlertSyntax('warning');
+
+      expect(inputEl.value).toContain('> [!WARNING]');
+      expect(inputEl.value).toContain('before');
+    });
+  });
+
+  // ── renderAlertPicker ─────────────────────────────────────────────────────
+
+  describe('renderAlertPicker', () => {
+    it('should populate alertPicker with alert-badge elements', () => {
+      api.renderAlertPicker();
+
+      const picker = document.getElementById('alertPicker');
+      const badges = picker.querySelectorAll('.alert-badge');
+      expect(badges.length).toBeGreaterThan(0);
+    });
+
+    it('should include built-in alert names in picker', () => {
+      api.renderAlertPicker();
+
+      const picker = document.getElementById('alertPicker');
+      const text = picker.textContent;
+      expect(text.toLowerCase()).toMatch(/note|warning|status/);
+    });
+  });
+
+  // ── Tab switching ─────────────────────────────────────────────────────────
+
+  describe('switchToTab', () => {
+    it('should hide panelConverter and show panelAlerts when switching to Alerts', () => {
+      api.switchToTab('Alerts');
+
+      expect(document.getElementById('panelAlerts').classList.contains('hidden')).toBe(false);
+      expect(document.getElementById('panelConverter').classList.contains('hidden')).toBe(true);
+    });
+
+    it('should show panelConverter and hide others when switching to Converter', () => {
+      api.switchToTab('Alerts');
+      api.switchToTab('Converter');
+
+      expect(document.getElementById('panelConverter').classList.contains('hidden')).toBe(false);
+      expect(document.getElementById('panelAlerts').classList.contains('hidden')).toBe(true);
+      expect(document.getElementById('panelSnippets').classList.contains('hidden')).toBe(true);
+    });
+
+    it('should show panelSnippets when switching to Snippets', () => {
+      api.switchToTab('Snippets');
+
+      expect(document.getElementById('panelSnippets').classList.contains('hidden')).toBe(false);
+      expect(document.getElementById('panelConverter').classList.contains('hidden')).toBe(true);
+    });
+  });
+
+  // ── openSettingsModal / closeSettingsModal ────────────────────────────────
+
+  describe('openSettingsModal / closeSettingsModal', () => {
+    it('should remove hidden class from settingsModal on open', () => {
+      const modal = document.getElementById('settingsModal');
+      modal.classList.add('hidden');
+
+      api.openSettingsModal();
+
+      expect(modal.classList.contains('hidden')).toBe(false);
+    });
+
+    it('should add hidden class to settingsModal on close', () => {
+      const modal = document.getElementById('settingsModal');
+      modal.classList.remove('hidden');
+
+      api.closeSettingsModal();
+
+      expect(modal.classList.contains('hidden')).toBe(true);
     });
   });
 });

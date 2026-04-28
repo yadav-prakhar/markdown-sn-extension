@@ -757,3 +757,7 @@ window.addEventListener('blur', () => {
 
 // Start
 init();
+
+if (typeof globalThis !== 'undefined') {
+  globalThis.__mdSn_popup = { debounce, convert, showToast, copyToClipboard, clearAll, saveQuickSnippet, renderAlertPicker, insertAlertSyntax, validateAlertForm, saveAlert, editAlert, resetAlertForm, resetBuiltInAlert, duplicateAlert, deleteCustomAlert, renderAlertsList, exportAlerts, handleImportFile, saveCustomAlertsToStorage, loadCustomAlertsFromStorage, saveSnippetsToStorage, loadSnippetsFromStorage, renderSnippetsList, editSnippet, saveSnippet, deleteSnippet, insertSnippetIntoInput, switchToTab, openSettingsModal, closeSettingsModal };
+}

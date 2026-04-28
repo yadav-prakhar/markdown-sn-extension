@@ -1,339 +1,155 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vitest';
+import { loadSource } from '../../setup/load-source.js';
 
-// Mock the markdownServicenow library
-const mockConvert = vi.fn((text) => `<h1>${text}</h1>`);
-global.markdownServicenow = {
-  convertMarkdownToServiceNow: mockConvert
-};
+// Listener callbacks captured once after background.js loads
+let onInstalledCb, onStartupCb, onClickedCb, onMessageCb, onChangedCb;
 
-// Mock importScripts
-global.importScripts = vi.fn();
+beforeAll(() => {
+  globalThis.importScripts = () => {};
+  loadSource('lib/markdown-servicenow.js');
+  if (global.window?.markdownServicenow) {
+    globalThis.markdownServicenow = global.window.markdownServicenow;
+  }
+  loadSource('background/background.js');
 
-// Import after setting up mocks
-let backgroundModule;
+  onInstalledCb = chrome.runtime.onInstalled.addListener.mock.calls[0]?.[0];
+  onStartupCb   = chrome.runtime.onStartup.addListener.mock.calls[0]?.[0];
+  onClickedCb   = chrome.contextMenus.onClicked.addListener.mock.calls[0]?.[0];
+  onMessageCb   = chrome.runtime.onMessage.addListener.mock.calls[0]?.[0];
+  onChangedCb   = chrome.storage.onChanged.addListener.mock.calls[0]?.[0];
+});
+
+afterAll(() => {
+  delete globalThis.importScripts;
+});
 
 describe('Background Service Worker', () => {
-  beforeEach(() => {
-    // Reset all mocks
-    vi.clearAllMocks();
-    mockConvert.mockImplementation((text) => `<h1>${text}</h1>`);
 
-    // Reset chrome API mocks
-    chrome.contextMenus.create.mockClear();
-    chrome.contextMenus.onClicked.addListener.mockClear();
-    chrome.tabs.sendMessage.mockClear();
-    chrome.runtime.onMessage.addListener.mockClear();
-    chrome.storage.local.set.mockClear();
-    chrome.notifications.create = vi.fn();
-  });
-
-  describe('Context Menu Creation', () => {
-    it('should create context menu on install', () => {
-      // Simulate the onInstalled event
-      const listeners = [];
-      chrome.runtime.onInstalled.addListener.mockImplementation((callback) => {
-        listeners.push(callback);
-        callback(); // Execute immediately for test
-      });
-
-      // Re-import to trigger the listener setup
-      eval(`
-        chrome.runtime.onInstalled.addListener(() => {
-          chrome.contextMenus.create({
-            id: 'convert-markdown',
-            title: 'Convert Markdown to ServiceNow',
-            contexts: ['selection']
-          });
-        });
-      `);
-
-      expect(chrome.contextMenus.create).toHaveBeenCalledWith({
-        id: 'convert-markdown',
-        title: 'Convert Markdown to ServiceNow',
-        contexts: ['selection']
-      });
-    });
-  });
-
-  describe('Context Menu Click Handler', () => {
-    let clickHandler;
-
-    beforeEach(() => {
-      // Capture the click handler
-      chrome.contextMenus.onClicked.addListener.mockImplementation((callback) => {
-        clickHandler = callback;
-      });
-
-      // Setup the listener - matches actual background.js behavior
-      // The background script now sends 'convertSelection' to content script
-      // and lets the content script do the actual conversion
-      eval(`
-        chrome.contextMenus.onClicked.addListener(async (info, tab) => {
-          if (info.menuItemId === 'convert-markdown' && info.selectionText) {
-            chrome.tabs.sendMessage(tab.id, {
-              action: 'convertSelection'
-            }, (response) => {
-              if (chrome.runtime.lastError) {
-                console.log('No frame handled selection');
-              }
-            });
-          }
-        });
-      `);
-    });
-
-    it('should send convertSelection message on context menu click', async () => {
-      const info = {
-        menuItemId: 'convert-markdown',
-        selectionText: 'Test markdown'
-      };
-      const tab = { id: 123 };
-
-      chrome.tabs.sendMessage.mockImplementation((tabId, message, callback) => {
-        callback({ success: true });
-      });
-
-      await clickHandler(info, tab);
-
-      expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(
-        123,
-        { action: 'convertSelection' },
+  describe('Context Menu Setup', () => {
+    it('creates context menu inside removeAll callback', () => {
+      chrome.contextMenus.removeAll.mockImplementation((cb) => cb?.());
+      const { setupContextMenu } = globalThis.__mdSn_background;
+      setupContextMenu();
+      expect(chrome.contextMenus.create).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'convert-markdown', contexts: ['selection'] }),
         expect.any(Function)
       );
     });
 
-    it('should send message to correct tab', async () => {
-      const info = {
-        menuItemId: 'convert-markdown',
-        selectionText: '# Header'
-      };
-      const tab = { id: 456 };
-
-      chrome.tabs.sendMessage.mockImplementation((tabId, message, callback) => {
-        expect(tabId).toBe(456);
-        expect(message.action).toBe('convertSelection');
-        callback({ success: true });
-      });
-
-      await clickHandler(info, tab);
-
-      expect(chrome.tabs.sendMessage).toHaveBeenCalled();
-    });
-
-    it('should not process if menuItemId does not match', async () => {
-      const info = {
-        menuItemId: 'other-menu',
-        selectionText: 'Test'
-      };
-      const tab = { id: 789 };
-
-      await clickHandler(info, tab);
-
-      expect(chrome.tabs.sendMessage).not.toHaveBeenCalled();
-    });
-
-    it('should not process if selectionText is empty', async () => {
-      const info = {
-        menuItemId: 'convert-markdown',
-        selectionText: ''
-      };
-      const tab = { id: 789 };
-
-      await clickHandler(info, tab);
-
-      expect(chrome.tabs.sendMessage).not.toHaveBeenCalled();
-    });
-
-    it('should handle no receiving end gracefully', async () => {
-      const consoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
-
-      chrome.tabs.sendMessage.mockImplementation((tabId, message, callback) => {
-        chrome.runtime.lastError = { message: 'No receiving end' };
-        callback();
+    it('handles lastError on context menu creation gracefully', () => {
+      chrome.contextMenus.removeAll.mockImplementation((cb) => cb?.());
+      chrome.contextMenus.create.mockImplementation((_opts, cb) => {
+        chrome.runtime.lastError = { message: 'already exists' };
+        cb?.();
         chrome.runtime.lastError = null;
       });
+      expect(() => globalThis.__mdSn_background.setupContextMenu()).not.toThrow();
+    });
 
-      const info = {
-        menuItemId: 'convert-markdown',
-        selectionText: 'Test'
-      };
-      const tab = { id: 999 };
+    it('registers onInstalled listener', () => {
+      expect(typeof onInstalledCb).toBe('function');
+    });
 
-      await clickHandler(info, tab);
+    it('registers onStartup listener', () => {
+      expect(typeof onStartupCb).toBe('function');
+    });
 
-      expect(consoleLog).toHaveBeenCalledWith('No frame handled selection');
-      consoleLog.mockRestore();
+    it('onInstalled triggers setupContextMenu (removeAll called)', () => {
+      chrome.contextMenus.removeAll.mockClear();
+      onInstalledCb();
+      expect(chrome.contextMenus.removeAll).toHaveBeenCalled();
+    });
+
+    it('onStartup triggers setupContextMenu (removeAll called)', () => {
+      chrome.contextMenus.removeAll.mockClear();
+      onStartupCb();
+      expect(chrome.contextMenus.removeAll).toHaveBeenCalled();
+    });
+  });
+
+  describe('Context Menu Click Handler', () => {
+    it('sends convertSelection to correct tab on valid click', async () => {
+      chrome.tabs.sendMessage.mockImplementation((_id, _msg, cb) => cb?.({ success: true }));
+      await onClickedCb({ menuItemId: 'convert-markdown', selectionText: '# Test' }, { id: 42 });
+      expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(42, { action: 'convertSelection' }, expect.any(Function));
+    });
+
+    it('ignores click for different menu item', async () => {
+      await onClickedCb({ menuItemId: 'other', selectionText: 'text' }, { id: 1 });
+      expect(chrome.tabs.sendMessage).not.toHaveBeenCalled();
+    });
+
+    it('ignores click when selectionText is empty', async () => {
+      await onClickedCb({ menuItemId: 'convert-markdown', selectionText: '' }, { id: 1 });
+      expect(chrome.tabs.sendMessage).not.toHaveBeenCalled();
+    });
+
+    it('handles no-receiving-end lastError gracefully', async () => {
+      chrome.tabs.sendMessage.mockImplementation((_id, _msg, cb) => {
+        chrome.runtime.lastError = { message: 'No receiving end' };
+        cb?.();
+        chrome.runtime.lastError = null;
+      });
+      await expect(
+        onClickedCb({ menuItemId: 'convert-markdown', selectionText: 'text' }, { id: 99 })
+      ).resolves.not.toThrow();
     });
   });
 
   describe('Message Listener', () => {
-    let messageHandler;
-
-    beforeEach(() => {
-      // Capture the message handler
-      chrome.runtime.onMessage.addListener.mockImplementation((callback) => {
-        messageHandler = callback;
-      });
-
-      // Setup the listener
-      eval(`
-        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-          if (message.action === 'convert') {
-            try {
-              const result = markdownServicenow.convertMarkdownToServiceNow(message.text);
-              sendResponse({ success: true, result });
-            } catch (error) {
-              sendResponse({ success: false, error: error.message });
-            }
-            return true;
-          }
-        });
-      `);
+    it('converts text and returns success response', () => {
+      const sendResponse = vi.fn();
+      const result = onMessageCb({ action: 'convert', text: '**bold**' }, {}, sendResponse);
+      expect(sendResponse).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
+      expect(result).toBe(true);
     });
 
-    it('should handle convert messages from popup', () => {
-      const message = {
-        action: 'convert',
-        text: '# Test'
-      };
-      const sender = {};
+    it('uses customAlerts from message when provided', () => {
       const sendResponse = vi.fn();
-
-      const result = messageHandler(message, sender, sendResponse);
-
-      expect(mockConvert).toHaveBeenCalledWith('# Test');
-      expect(sendResponse).toHaveBeenCalledWith({
-        success: true,
-        result: '<h1># Test</h1>'
-      });
-      expect(result).toBe(true); // Should return true for async response
+      const customAlerts = { myalert: { name: 'myalert' } };
+      onMessageCb({ action: 'convert', text: '# Hi', customAlerts }, {}, sendResponse);
+      expect(sendResponse).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
     });
 
-    it('should handle conversion errors in messages', () => {
-      mockConvert.mockImplementation(() => {
-        throw new Error('Invalid markdown');
-      });
-
-      const message = {
-        action: 'convert',
-        text: 'Bad input'
-      };
-      const sender = {};
+    it('returns error response when conversion throws', () => {
+      const origConvert = globalThis.markdownServicenow.convertMarkdownToServiceNow;
+      globalThis.markdownServicenow.convertMarkdownToServiceNow = () => { throw new Error('bad'); };
       const sendResponse = vi.fn();
-
-      messageHandler(message, sender, sendResponse);
-
-      expect(sendResponse).toHaveBeenCalledWith({
-        success: false,
-        error: 'Invalid markdown'
-      });
+      onMessageCb({ action: 'convert', text: 'x' }, {}, sendResponse);
+      expect(sendResponse).toHaveBeenCalledWith({ success: false, error: 'bad' });
+      globalThis.markdownServicenow.convertMarkdownToServiceNow = origConvert;
     });
 
-    it('should not process non-convert messages', () => {
-      const message = {
-        action: 'other-action',
-        text: 'Test'
-      };
-      const sender = {};
+    it('ignores non-convert messages', () => {
       const sendResponse = vi.fn();
-
-      const result = messageHandler(message, sender, sendResponse);
-
-      expect(mockConvert).not.toHaveBeenCalled();
+      const result = onMessageCb({ action: 'other' }, {}, sendResponse);
       expect(sendResponse).not.toHaveBeenCalled();
       expect(result).toBeUndefined();
     });
   });
 
-  describe('copyToClipboard Helper', () => {
-    it('should store text in chrome.storage.local', async () => {
-      chrome.storage.local.set.mockImplementation((data, callback) => {
-        expect(data.clipboardText).toBe('Converted text');
-        callback();
-      });
-
-      // Simulate copyToClipboard function
-      const copyToClipboard = async (text) => {
-        chrome.storage.local.set({ clipboardText: text }, () => {
-          chrome.notifications.create({
-            type: 'basic',
-            iconUrl: '../icons/icon48.png',
-            title: 'Markdown Converted',
-            message: 'Output copied to clipboard!'
-          });
-        });
-      };
-
-      await copyToClipboard('Converted text');
-
-      expect(chrome.storage.local.set).toHaveBeenCalled();
-    });
-
-    it('should create notification after copying', async () => {
-      chrome.storage.local.set.mockImplementation((data, callback) => {
-        callback();
-      });
-
-      chrome.notifications.create.mockImplementation((options) => {
-        expect(options.type).toBe('basic');
-        expect(options.title).toBe('Markdown Converted');
-        expect(options.message).toBe('Output copied to clipboard!');
-      });
-
-      const copyToClipboard = async (text) => {
-        chrome.storage.local.set({ clipboardText: text }, () => {
-          chrome.notifications.create({
-            type: 'basic',
-            iconUrl: '../icons/icon48.png',
-            title: 'Markdown Converted',
-            message: 'Output copied to clipboard!'
-          });
-        });
-      };
-
-      await copyToClipboard('Test');
-
-      expect(chrome.notifications.create).toHaveBeenCalled();
+  describe('loadCustomAlerts', () => {
+    it('loads custom alerts from chrome.storage.local', () => {
+      const custom = { myalert: { name: 'myalert', emoji: '🎯' } };
+      chrome.storage.local.get.mockImplementation((_keys, cb) => cb({ customAlertTypes: custom }));
+      const { loadCustomAlerts } = globalThis.__mdSn_background;
+      loadCustomAlerts();
+      expect(chrome.storage.local.get).toHaveBeenCalledWith(['customAlertTypes'], expect.any(Function));
     });
   });
 
-  describe('Integration Scenarios', () => {
-    it('should handle full flow from context menu to content script', async () => {
-      // Setup complete flow
-      let clickHandler;
-      chrome.contextMenus.onClicked.addListener.mockImplementation((callback) => {
-        clickHandler = callback;
-      });
+  describe('storage.onChanged listener', () => {
+    it('updates customAlerts when customAlertTypes changes', () => {
+      const newCustom = { updated: { name: 'updated' } };
+      onChangedCb({ customAlertTypes: { newValue: newCustom } }, 'local');
+      // Verify conversion uses updated alerts via message listener
+      const sendResponse = vi.fn();
+      onMessageCb({ action: 'convert', text: '# Hi' }, {}, sendResponse);
+      expect(sendResponse).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
+    });
 
-      // The background script delegates conversion to content script
-      eval(`
-        chrome.contextMenus.onClicked.addListener(async (info, tab) => {
-          if (info.menuItemId === 'convert-markdown' && info.selectionText) {
-            chrome.tabs.sendMessage(tab.id, {
-              action: 'convertSelection'
-            }, (response) => {});
-          }
-        });
-      `);
-
-      chrome.tabs.sendMessage.mockImplementation((tabId, message, callback) => {
-        callback({ success: true });
-      });
-
-      const info = {
-        menuItemId: 'convert-markdown',
-        selectionText: '**Bold text**'
-      };
-      const tab = { id: 100 };
-
-      await clickHandler(info, tab);
-
-      // Background script sends convertSelection, content script does the conversion
-      expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(
-        100,
-        { action: 'convertSelection' },
-        expect.any(Function)
-      );
+    it('ignores changes from non-local storage areas', () => {
+      expect(() => onChangedCb({ customAlertTypes: { newValue: {} } }, 'sync')).not.toThrow();
     });
   });
 });

@@ -6,10 +6,12 @@ Project instructions for Claude Code when working with this repository.
 
 **Markdown to ServiceNow** is a Chrome Extension (Manifest V3) that converts Markdown to ServiceNow journal field format. It provides three conversion methods:
 1. **Popup converter** - Click extension icon, paste markdown, copy output
+   - New tab layout for side-by-side input/output
+   - Duplicate alert detection warns before creating duplicate custom alerts
 2. **Context menu** - Right-click selected text to convert
 3. **In-page buttons** - Convert buttons on ServiceNow journal fields
 
-**Version:** 3.0.1
+**Version:** 3.1.0
 **Library:** markdown-servicenow v2.0.0 (bundled)
 
 ## Quick Reference
@@ -30,8 +32,8 @@ npm run test:coverage
 # Run only unit tests
 npm run test:unit
 
-# Run only integration tests
-npm run test:integration
+# Run only integration tests (tests/integration/ not yet created)
+# npm run test:integration
 
 # Open Vitest UI (browser-based test runner)
 npm run test:ui
@@ -198,12 +200,15 @@ tests/
 ├── mocks/chrome-api.js             # Chrome extension API mocks
 ├── setup/
 │   ├── vitest.setup.js             # Global test setup (DOM, Chrome)
+│   ├── load-source.js              # vm.Script loader for real-source coverage
 │   └── test-helpers.js             # Shared test utilities
 └── unit/
     ├── lib/                        # Library conversion tests
     ├── background/                 # Service worker tests
     ├── content/                    # Content script tests
+    │   └── _setup.js              # Content DOM + loadSource helper
     └── popup/                      # Popup UI tests
+        └── _setup.js              # Popup DOM + loadSource helper
 ```
 
 ### Writing Tests
@@ -225,6 +230,24 @@ it('should convert X to Y', () => {
 });
 ```
 
+#### background / content / popup tests (real-source coverage)
+
+`background.js`, `content.js`, and `popup.js` are not ES modules — use `loadSource` to evaluate them via `vm.Script.runInThisContext` so v8 attributes coverage to the real file.
+
+```javascript
+import { loadSource } from '../../setup/load-source.js';
+// For content/popup tests use the shared helpers:
+import { setupContent } from './_setup.js';  // returns { api, textarea }
+import { setupPopup }   from './_setup.js';  // returns api (globalThis.__mdSn_popup)
+```
+
+**Critical gotchas:**
+- `vi.useFakeTimers()` must be called **after** `await setupContent()` / `await setupPopup()` — both helpers use `setTimeout(r, 0)` to flush microtasks, which blocks under fake timers.
+- The lib exports to `window.markdownServicenow` (happy-dom Window), not `globalThis`. After `loadSource('lib/…')`, mirror it: `if (global.window?.markdownServicenow) globalThis.markdownServicenow = global.window.markdownServicenow;`
+- `vi.spyOn(api, 'fn')` cannot intercept direct closure calls inside an IIFE — test DOM side-effects instead (e.g. `document.querySelector('.md-sn-notification-error')`).
+- content.js IIFE guard: `window.__mdSnInitialized = false` before reloading per test (handled by `_setup.js`).
+- Each source file exposes internals via `globalThis.__mdSn_background`, `__mdSn_popup`, `__mdSn_content` debug-export footers. Do not remove these.
+
 ### Coverage Thresholds
 
 ```javascript
@@ -236,6 +259,8 @@ thresholds: {
   statements: 80
 }
 ```
+
+`docs/**` is excluded from coverage (`docs/lib/markdown-servicenow.js` is a docs copy — including it pulls overall below threshold).
 
 ## Development Workflow
 

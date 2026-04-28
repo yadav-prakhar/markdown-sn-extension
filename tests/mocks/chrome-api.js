@@ -3,6 +3,7 @@ import { vi } from 'vitest';
 export const mockChrome = {
   runtime: {
     onInstalled: { addListener: vi.fn() },
+    onStartup: { addListener: vi.fn() },
     onMessage: { addListener: vi.fn() },
     getURL: vi.fn((path) => `chrome-extension://test-id/${path}`),
     lastError: null,
@@ -13,6 +14,7 @@ export const mockChrome = {
   },
   contextMenus: {
     create: vi.fn(),
+    removeAll: vi.fn((cb) => { if (cb) cb(); }),
     onClicked: { addListener: vi.fn() }
   },
   storage: {
@@ -29,7 +31,8 @@ export const mockChrome = {
         if (callback) callback();
         return Promise.resolve();
       })
-    }
+    },
+    onChanged: { addListener: vi.fn() }
   },
   tabs: {
     sendMessage: vi.fn((tabId, msg, callback) => {
