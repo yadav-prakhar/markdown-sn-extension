@@ -30,7 +30,7 @@
   },
   "build": {
     "buildCommand": null,
-    "testCommand": "npm test 2>&1",
+    "testCommand": "git commit --no-gpg-sign -m \"$(cat <<'EOF'\ntest: add real-source test infrastructure and expand coverage\n\n## Test infrastructure\n\n- Add `tests/setup/load-source.js`: vm.Script loader that evaluates source\n  files via runInThisContext so v8 attributes coverage to the real file\n  instead of a mock module.\n- Add `tests/unit/content/_setup.js`: shared helper that builds the full\n  content-script DOM, resets the IIFE guard (`window.__mdSnInitialized`),\n  loads lib + content.js, and returns the `__mdSn_content` API handle.\n- Add `tests/unit/popup/_setup.js`: shared helper that builds the full\n  popup DOM (tabs, modals, settings panel, snippet/alert lists), loads lib\n  + popup.js, and returns the `__mdSn_popup` API handle.\n\n## Debug-export footers (source files)\n\nAdd `globalThis.__mdSn_*` export blocks to the three non-module source\nfiles so tests can access internal functions after real-source loading:\n- `background/background.js` → `__mdSn_background`\n- `content/content.js`       → `__mdSn_content`\n- `popup/popup.js`           → `__mdSn_popup`\n\n## New test files (content script)\n\n- `tests/unit/content/conversion-flow.test.js`: convertTextarea,\n  restoreMarkdown, undo stack, event dispatch, and notification rendering.\n- `tests/unit/content/dom-observer.test.js`: MutationObserver-based\n  enhanceJournalFields and observeDOM behaviour.\n- `tests/unit/content/picker-dropdowns.test.js`: alert picker and snippet\n  picker insertion flows.\n- `tests/unit/content/preview-modal.test.js`: openPreviewModal rendering,\n  sanitizeHtml XSS stripping, and modal close logic.\n\n## New test files (popup)\n\n- `tests/unit/popup/debug.test.js`: smoke-tests that the `__mdSn_popup`\n  debug export is populated after real-source load.\n\n## Refactored existing tests to use real-source loading\n\n- `tests/unit/background/background.test.js`: replaced mock-only approach\n  with `loadSource`; captures listener callbacks from `mock.calls` after\n  the module loads (`onInstalled`, `onStartup`, `onClicked`, `onMessage`,\n  `onChanged`).\n- `tests/unit/popup/popup.test.js`: replaced inline DOM + mock setup with\n  `setupPopup()` helper; tests now exercise the real popup code paths.\n- `tests/unit/popup/alert-management.test.js`: same migration; tests now\n  hit real alert CRUD, validation, import/export, and storage sync logic.\n\n## Chrome API mock additions\n\nAdd three previously-missing entries to `tests/mocks/chrome-api.js` that\nare required by the real source code:\n- `chrome.runtime.onStartup` with `addListener` stub\n- `chrome.contextMenus.removeAll` (calls callback immediately)\n- `chrome.storage.onChanged` with `addListener` stub\n\n## Coverage config\n\nExclude `docs/**` from vitest coverage so the docs copy of the library\ndoes not drag overall line/function/branch percentages below threshold.\n\n## CLAUDE.md\n\nDocument the real-source loading pattern, `loadSource` / `setupContent` /\n`setupPopup` helpers, fake-timer ordering constraint, lib→globalThis mirror\nstep, IIFE guard reset, and the `__mdSn_*` debug-export contract.\nEOF\n)\"",
     "lintCommand": null,
     "devCommand": null,
     "scripts": {
@@ -186,14 +186,14 @@
   "hotPaths": [
     {
       "path": "content/content.js",
-      "accessCount": 79,
-      "lastAccessed": 1777361851415,
+      "accessCount": 89,
+      "lastAccessed": 1777372085457,
       "type": "file"
     },
     {
       "path": "popup/popup.js",
-      "accessCount": 65,
-      "lastAccessed": 1777362480666,
+      "accessCount": 67,
+      "lastAccessed": 1777371000008,
       "type": "file"
     },
     {
@@ -209,27 +209,33 @@
       "type": "file"
     },
     {
+      "path": "lib/markdown-servicenow.js",
+      "accessCount": 28,
+      "lastAccessed": 1777370317495,
+      "type": "file"
+    },
+    {
       "path": "content/content.css",
       "accessCount": 27,
       "lastAccessed": 1777272859551,
       "type": "file"
     },
     {
-      "path": "lib/markdown-servicenow.js",
-      "accessCount": 26,
-      "lastAccessed": 1777361846776,
-      "type": "file"
-    },
-    {
       "path": "",
-      "accessCount": 23,
-      "lastAccessed": 1777362377811,
+      "accessCount": 25,
+      "lastAccessed": 1777372072805,
       "type": "directory"
     },
     {
       "path": "manifest.json",
       "accessCount": 22,
       "lastAccessed": 1777358422880,
+      "type": "file"
+    },
+    {
+      "path": "CLAUDE.md",
+      "accessCount": 20,
+      "lastAccessed": 1777373823942,
       "type": "file"
     },
     {
@@ -251,15 +257,27 @@
       "type": "file"
     },
     {
-      "path": "CLAUDE.md",
-      "accessCount": 9,
-      "lastAccessed": 1776064618973,
+      "path": "background/background.js",
+      "accessCount": 7,
+      "lastAccessed": 1777371393453,
       "type": "file"
     },
     {
       "path": "tests/unit/content/toolbar-injection.test.js",
+      "accessCount": 7,
+      "lastAccessed": 1777372076342,
+      "type": "file"
+    },
+    {
+      "path": "tests/unit/content/_setup.js",
       "accessCount": 6,
-      "lastAccessed": 1775653017503,
+      "lastAccessed": 1777373594849,
+      "type": "file"
+    },
+    {
+      "path": "tests/unit/content/conversion-flow.test.js",
+      "accessCount": 6,
+      "lastAccessed": 1777373614427,
       "type": "file"
     },
     {
@@ -269,27 +287,33 @@
       "type": "file"
     },
     {
+      "path": "tests/mocks/chrome-api.js",
+      "accessCount": 5,
+      "lastAccessed": 1777372080480,
+      "type": "file"
+    },
+    {
       "path": ".claude/commands/release-prep.md",
       "accessCount": 4,
       "lastAccessed": 1775676322582,
       "type": "file"
     },
     {
-      "path": "background/background.js",
-      "accessCount": 4,
-      "lastAccessed": 1777360752693,
-      "type": "file"
-    },
-    {
       "path": "tests/unit/popup/popup.test.js",
-      "accessCount": 3,
-      "lastAccessed": 1777362381943,
+      "accessCount": 4,
+      "lastAccessed": 1777370165660,
       "type": "file"
     },
     {
       "path": "vitest.config.js",
-      "accessCount": 2,
-      "lastAccessed": 1776059216523,
+      "accessCount": 4,
+      "lastAccessed": 1777372201392,
+      "type": "file"
+    },
+    {
+      "path": "tests/unit/popup/alert-management.test.js",
+      "accessCount": 3,
+      "lastAccessed": 1777370949695,
       "type": "file"
     },
     {
@@ -299,15 +323,39 @@
       "type": "directory"
     },
     {
-      "path": "tests/unit/content/field-detection.test.js",
-      "accessCount": 1,
-      "lastAccessed": 1775645306705,
+      "path": "tests/unit/content/dom-observer.test.js",
+      "accessCount": 2,
+      "lastAccessed": 1777371618528,
+      "type": "directory"
+    },
+    {
+      "path": "tests/unit/background/background.test.js",
+      "accessCount": 2,
+      "lastAccessed": 1777372011951,
       "type": "file"
     },
     {
       "path": "tests/setup/vitest.setup.js",
+      "accessCount": 2,
+      "lastAccessed": 1777372054763,
+      "type": "file"
+    },
+    {
+      "path": "tests/unit/popup/_setup.js",
+      "accessCount": 2,
+      "lastAccessed": 1777373595670,
+      "type": "file"
+    },
+    {
+      "path": "tests/setup/load-source.js",
+      "accessCount": 2,
+      "lastAccessed": 1777373604526,
+      "type": "file"
+    },
+    {
+      "path": "tests/unit/content/field-detection.test.js",
       "accessCount": 1,
-      "lastAccessed": 1775645313487,
+      "lastAccessed": 1775645306705,
       "type": "file"
     },
     {
@@ -341,9 +389,15 @@
       "type": "file"
     },
     {
-      "path": "tests/unit/popup/alert-management.test.js",
+      "path": "tests/unit/content/preview-modal.test.js",
       "accessCount": 1,
-      "lastAccessed": 1777362577808,
+      "lastAccessed": 1777372091137,
+      "type": "file"
+    },
+    {
+      "path": "tests/unit/content/picker-dropdowns.test.js",
+      "accessCount": 1,
+      "lastAccessed": 1777372122375,
       "type": "file"
     }
   ],
