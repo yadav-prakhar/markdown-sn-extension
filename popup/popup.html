@@ -10,56 +10,160 @@
   <div class="container">
     <header>
       <h1>📝 MD → ServiceNow</h1>
-      <button id="settingsBtn" class="settings-btn" title="Custom Alert Types">⚙️</button>
+      <button id="settingsBtn" class="settings-btn" title="Import / Export">⚙️</button>
     </header>
-    
-    <div class="editor-section">
-      <div class="panel">
-        <label for="input">Markdown Input</label>
-        <textarea
-          id="input"
-          placeholder="Paste your markdown here..."
-          spellcheck="false"
-        ></textarea>
-      </div>
 
-      <div class="alert-picker" id="alertPicker">
-        <!-- Alert badges populated by JS -->
-      </div>
-
-      <div class="panel">
-        <label for="output">
-          ServiceNow Output
-          <span class="char-count" id="charCount">0 chars</span>
-        </label>
-        <textarea 
-          id="output" 
-          readonly 
-          placeholder="Converted output will appear here..."
-        ></textarea>
-      </div>
-    </div>
-    
-    <div class="actions">
-      <button id="copyBtn" class="btn btn-primary" disabled>
-        <span class="btn-icon">📋</span>
-        Copy to Clipboard
-      </button>
-      <button id="saveSnippetQuickBtn" class="btn btn-secondary" disabled title="Save output as snippet">
-        <span class="btn-icon">📌</span>
-        Save Snippet
-      </button>
-      <button id="clearBtn" class="btn btn-secondary">
-        <span class="btn-icon">🗑️</span>
-        Clear
-      </button>
+    <div class="popup-tabs">
+      <button type="button" class="popup-tab active" id="tabConverter">Converter</button>
+      <button type="button" class="popup-tab" id="tabAlerts">Alerts</button>
+      <button type="button" class="popup-tab" id="tabSnippets">Snippets</button>
     </div>
 
-    <div id="quickSaveForm" class="quick-save-form hidden">
-      <input type="text" id="quickSaveName" placeholder="Snippet name..." maxlength="40" autocomplete="off">
-      <div class="quick-save-actions">
-        <button id="quickSaveConfirmBtn" class="btn btn-primary btn-small">Save</button>
-        <button id="quickSaveCancelBtn" class="btn btn-secondary btn-small">Cancel</button>
+    <!-- Converter Tab Panel -->
+    <div id="panelConverter" class="tab-panel">
+      <div class="editor-section">
+        <div class="panel">
+          <label for="input">Markdown Input</label>
+          <textarea
+            id="input"
+            placeholder="Paste your markdown here..."
+            spellcheck="false"
+          ></textarea>
+        </div>
+
+        <div class="alert-picker" id="alertPicker">
+          <!-- Alert badges populated by JS -->
+        </div>
+
+        <div class="panel">
+          <label for="output">
+            ServiceNow Output
+            <span class="char-count" id="charCount">0 chars</span>
+          </label>
+          <textarea
+            id="output"
+            readonly
+            placeholder="Converted output will appear here..."
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="copyBtn" class="btn btn-primary" disabled>
+          <span class="btn-icon">📋</span>
+          Copy to Clipboard
+        </button>
+        <button id="saveSnippetQuickBtn" class="btn btn-secondary" disabled title="Save output as snippet">
+          <span class="btn-icon">📌</span>
+          Save Snippet
+        </button>
+        <button id="clearBtn" class="btn btn-secondary">
+          <span class="btn-icon">🗑️</span>
+          Clear
+        </button>
+      </div>
+
+      <div id="quickSaveForm" class="quick-save-form hidden">
+        <input type="text" id="quickSaveName" placeholder="Snippet name..." maxlength="40" autocomplete="off">
+        <div class="quick-save-actions">
+          <button id="quickSaveConfirmBtn" class="btn btn-primary btn-small">Save</button>
+          <button id="quickSaveCancelBtn" class="btn btn-secondary btn-small">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerts Tab Panel -->
+    <div id="panelAlerts" class="tab-panel hidden">
+      <div class="tab-panel-body">
+        <div class="alerts-section">
+          <h3>Built-in Alerts</h3>
+          <div id="builtInAlertsList" class="alerts-list">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <div class="alerts-section">
+          <h3>Custom Alerts</h3>
+          <div id="customAlertsList" class="alerts-list">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <div class="alert-form-section">
+          <h3 id="formTitle">Add New Alert</h3>
+          <form id="alertForm">
+            <input type="hidden" id="editingAlert" value="">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="alertName">Name</label>
+                <input type="text" id="alertName" placeholder="myalert" maxlength="20">
+              </div>
+              <div class="form-group">
+                <label for="alertDisplayName">Display Name</label>
+                <input type="text" id="alertDisplayName" placeholder="MY ALERT" maxlength="30">
+              </div>
+              <div class="form-group form-group-small">
+                <label for="alertEmoji">Emoji</label>
+                <input type="text" id="alertEmoji" placeholder="🎯" maxlength="10">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="alertBgColor">Background</label>
+                <input type="color" id="alertBgColor" value="#f0f0f0">
+              </div>
+              <div class="form-group">
+                <label for="alertTextColor">Text</label>
+                <input type="color" id="alertTextColor" value="#333333">
+              </div>
+              <div class="form-group">
+                <label for="alertBorderColor">Border</label>
+                <input type="color" id="alertBorderColor" value="#666666">
+              </div>
+            </div>
+            <div class="preview-section">
+              <label>Preview</label>
+              <div id="alertPreview" class="alert-preview">
+                <span class="preview-content">🎯 <strong>MY ALERT:</strong> Sample text</span>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" id="saveAlertBtn" class="btn btn-primary btn-small">Add Alert</button>
+              <button type="button" id="cancelEditBtn" class="btn btn-secondary btn-small hidden">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Snippets Tab Panel -->
+    <div id="panelSnippets" class="tab-panel hidden">
+      <div class="tab-panel-body">
+        <div class="snippets-section">
+          <h3>Saved Snippets</h3>
+          <div id="snippetsList">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <div class="snippet-form-section">
+          <h3 id="snippetFormTitle">Add New Snippet</h3>
+          <form id="snippetForm">
+            <input type="hidden" id="editingSnippet" value="">
+            <div class="form-group">
+              <label for="snippetName">Name</label>
+              <input type="text" id="snippetName" placeholder="My Template" maxlength="40">
+            </div>
+            <div class="form-group">
+              <label for="snippetContent">Content</label>
+              <textarea id="snippetContent" placeholder="Your markdown snippet..." rows="4"></textarea>
+            </div>
+            <div class="form-actions">
+              <button type="submit" id="saveSnippetBtn" class="btn btn-primary btn-small">Add Snippet</button>
+              <button type="button" id="cancelSnippetEditBtn" class="btn btn-secondary btn-small hidden">Cancel</button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
 
@@ -68,112 +172,13 @@
       <span class="toast-message">Copied to clipboard!</span>
     </div>
 
-    <!-- Settings Modal -->
+    <!-- Settings Modal (Import / Export only) -->
     <div id="settingsModal" class="modal hidden">
-      <div class="modal-content">
+      <div class="modal-content modal-content-compact">
         <div class="modal-header">
-          <h2>Settings</h2>
+          <h2>Import / Export</h2>
           <button id="closeModalBtn" class="close-btn">&times;</button>
         </div>
-
-        <div class="modal-tabs">
-          <button class="modal-tab active" id="tabAlerts">Alerts</button>
-          <button class="modal-tab" id="tabSnippets">Snippets</button>
-        </div>
-
-        <div id="alertsTab">
-        <div class="modal-body">
-          <div class="alerts-section">
-            <h3>Built-in Alerts</h3>
-            <div id="builtInAlertsList" class="alerts-list">
-              <!-- Populated by JS -->
-            </div>
-          </div>
-
-          <div class="alerts-section">
-            <h3>Custom Alerts</h3>
-            <div id="customAlertsList" class="alerts-list">
-              <!-- Populated by JS -->
-            </div>
-          </div>
-
-          <div class="alert-form-section">
-            <h3 id="formTitle">Add New Alert</h3>
-            <form id="alertForm">
-              <input type="hidden" id="editingAlert" value="">
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="alertName">Name</label>
-                  <input type="text" id="alertName" placeholder="myalert" maxlength="20">
-                </div>
-                <div class="form-group">
-                  <label for="alertDisplayName">Display Name</label>
-                  <input type="text" id="alertDisplayName" placeholder="MY ALERT" maxlength="30">
-                </div>
-                <div class="form-group form-group-small">
-                  <label for="alertEmoji">Emoji</label>
-                  <input type="text" id="alertEmoji" placeholder="🎯" maxlength="10">
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="alertBgColor">Background</label>
-                  <input type="color" id="alertBgColor" value="#f0f0f0">
-                </div>
-                <div class="form-group">
-                  <label for="alertTextColor">Text</label>
-                  <input type="color" id="alertTextColor" value="#333333">
-                </div>
-                <div class="form-group">
-                  <label for="alertBorderColor">Border</label>
-                  <input type="color" id="alertBorderColor" value="#666666">
-                </div>
-              </div>
-              <div class="preview-section">
-                <label>Preview</label>
-                <div id="alertPreview" class="alert-preview">
-                  <span class="preview-content">🎯 <strong>MY ALERT:</strong> Sample text</span>
-                </div>
-              </div>
-              <div class="form-actions">
-                <button type="submit" id="saveAlertBtn" class="btn btn-primary btn-small">Add Alert</button>
-                <button type="button" id="cancelEditBtn" class="btn btn-secondary btn-small hidden">Cancel</button>
-              </div>
-            </form>
-          </div>
-        </div>
-        </div><!-- end alertsTab -->
-
-        <div id="snippetsTab" class="hidden">
-          <div class="modal-body">
-            <div class="snippets-section">
-              <h3>Saved Snippets</h3>
-              <div id="snippetsList">
-                <!-- Populated by JS -->
-              </div>
-            </div>
-
-            <div class="snippet-form-section">
-              <h3 id="snippetFormTitle">Add New Snippet</h3>
-              <form id="snippetForm">
-                <input type="hidden" id="editingSnippet" value="">
-                <div class="form-group">
-                  <label for="snippetName">Name</label>
-                  <input type="text" id="snippetName" placeholder="My Template" maxlength="40">
-                </div>
-                <div class="form-group">
-                  <label for="snippetContent">Content</label>
-                  <textarea id="snippetContent" placeholder="Your markdown snippet..." rows="4"></textarea>
-                </div>
-                <div class="form-actions">
-                  <button type="submit" id="saveSnippetBtn" class="btn btn-primary btn-small">Add Snippet</button>
-                  <button type="button" id="cancelSnippetEditBtn" class="btn btn-secondary btn-small hidden">Cancel</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div><!-- end snippetsTab -->
-
         <div class="modal-footer">
           <button id="importBtn" class="btn btn-secondary btn-small">📥 Import</button>
           <button id="exportBtn" class="btn btn-secondary btn-small">📤 Export</button>
@@ -182,7 +187,7 @@
       </div>
     </div>
   </div>
-  
+
   <script src="../lib/markdown-servicenow.js"></script>
   <script src="popup.js"></script>
 </body>

@@ -30,7 +30,7 @@
   },
   "build": {
     "buildCommand": null,
-    "testCommand": "npm test",
+    "testCommand": "npm test 2>&1",
     "lintCommand": null,
     "devCommand": null,
     "scripts": {
@@ -186,14 +186,20 @@
   "hotPaths": [
     {
       "path": "content/content.js",
-      "accessCount": 78,
-      "lastAccessed": 1777274436666,
+      "accessCount": 79,
+      "lastAccessed": 1777361851415,
       "type": "file"
     },
     {
       "path": "popup/popup.js",
-      "accessCount": 46,
-      "lastAccessed": 1777357169001,
+      "accessCount": 65,
+      "lastAccessed": 1777362480666,
+      "type": "file"
+    },
+    {
+      "path": "popup/popup.css",
+      "accessCount": 33,
+      "lastAccessed": 1777361847098,
       "type": "file"
     },
     {
@@ -203,34 +209,28 @@
       "type": "file"
     },
     {
-      "path": "lib/markdown-servicenow.js",
-      "accessCount": 24,
-      "lastAccessed": 1777357244060,
-      "type": "file"
-    },
-    {
-      "path": "manifest.json",
-      "accessCount": 21,
-      "lastAccessed": 1777276129721,
-      "type": "file"
-    },
-    {
-      "path": "popup/popup.css",
-      "accessCount": 21,
-      "lastAccessed": 1777357733143,
-      "type": "file"
-    },
-    {
       "path": "popup/popup.html",
-      "accessCount": 20,
-      "lastAccessed": 1777357735165,
+      "accessCount": 27,
+      "lastAccessed": 1777361842954,
+      "type": "file"
+    },
+    {
+      "path": "lib/markdown-servicenow.js",
+      "accessCount": 26,
+      "lastAccessed": 1777361846776,
       "type": "file"
     },
     {
       "path": "",
-      "accessCount": 18,
-      "lastAccessed": 1777357474319,
+      "accessCount": 23,
+      "lastAccessed": 1777362377811,
       "type": "directory"
+    },
+    {
+      "path": "manifest.json",
+      "accessCount": 22,
+      "lastAccessed": 1777358422880,
+      "type": "file"
     },
     {
       "path": "docs/index.html",
@@ -276,8 +276,14 @@
     },
     {
       "path": "background/background.js",
+      "accessCount": 4,
+      "lastAccessed": 1777360752693,
+      "type": "file"
+    },
+    {
+      "path": "tests/unit/popup/popup.test.js",
       "accessCount": 3,
-      "lastAccessed": 1775658233649,
+      "lastAccessed": 1777362381943,
       "type": "file"
     },
     {
@@ -285,6 +291,12 @@
       "accessCount": 2,
       "lastAccessed": 1776059216523,
       "type": "file"
+    },
+    {
+      "path": "popup",
+      "accessCount": 2,
+      "lastAccessed": 1777361858738,
+      "type": "directory"
     },
     {
       "path": "tests/unit/content/field-detection.test.js",
@@ -329,15 +341,9 @@
       "type": "file"
     },
     {
-      "path": "popup",
+      "path": "tests/unit/popup/alert-management.test.js",
       "accessCount": 1,
-      "lastAccessed": 1777273405557,
-      "type": "directory"
-    },
-    {
-      "path": "tests/unit/popup/popup.test.js",
-      "accessCount": 1,
-      "lastAccessed": 1777357483435,
+      "lastAccessed": 1777362577808,
       "type": "file"
     }
   ],

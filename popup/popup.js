@@ -176,11 +176,6 @@ function insertAlertSyntax(alertName) {
 // ==================== Settings Modal ====================
 
 function openSettingsModal() {
-  quickSaveForm.classList.add('hidden');
-  quickSaveNameInput.value = '';
-  renderAlertsList();
-  resetAlertForm();
-  renderSnippetsList();
   settingsModal.classList.remove('hidden');
 }
 
@@ -202,6 +197,7 @@ function renderAlertsList() {
       <span class="alert-name">${name.toUpperCase()}</span>
       <span class="alert-actions">
         <button type="button" data-action="edit" data-name="${name}" title="Edit">✏️</button>
+        <button type="button" data-action="duplicate" data-name="${name}" title="Duplicate">📋</button>
         ${isModified ? `<button type="button" data-action="reset" data-name="${name}" title="Reset to default">↩️</button>` : ''}
       </span>
     `;
@@ -223,6 +219,7 @@ function renderAlertsList() {
         <span class="alert-name">${alert.displayName || name.toUpperCase()}</span>
         <span class="alert-actions">
           <button type="button" data-action="edit" data-name="${name}" title="Edit">✏️</button>
+          <button type="button" data-action="duplicate" data-name="${name}" title="Duplicate">📋</button>
           <button type="button" data-action="delete" data-name="${name}" title="Delete">🗑️</button>
         </span>
       `;
@@ -246,6 +243,8 @@ function handleAlertAction(e) {
     resetBuiltInAlert(name);
   } else if (action === 'delete') {
     deleteCustomAlert(name);
+  } else if (action === 'duplicate') {
+    duplicateAlert(name);
   }
 }
 
@@ -258,7 +257,7 @@ function editAlert(name) {
   formTitle.textContent = isBuiltIn ? `Edit ${name.toUpperCase()}` : `Edit Custom Alert`;
   editingAlertInput.value = name;
   alertNameInput.value = name;
-  alertNameInput.disabled = true; // Can't change name when editing
+  alertNameInput.disabled = isBuiltIn; // Custom alerts can be renamed; built-ins cannot
   alertDisplayNameInput.value = alert.displayName || name.toUpperCase();
   alertEmojiInput.value = alert.emoji || '';
   alertBgColorInput.value = alert.backgroundColor || '#f0f0f0';
@@ -302,26 +301,31 @@ function validateAlertForm() {
   const name = alertNameInput.value.trim().toLowerCase();
   const displayName = alertDisplayNameInput.value.trim();
   const emoji = alertEmojiInput.value.trim();
-  const isEditing = editingAlertInput.value !== '';
+  const editingName = editingAlertInput.value;
+  const isBuiltIn = editingName !== '' && !!builtInAlerts[editingName];
 
-  if (!isEditing && !name) {
+  if (!name) {
     showToast('Name is required');
     return null;
   }
 
-  if (!isEditing && !/^[a-z][a-z0-9_]*$/.test(name)) {
-    showToast('Name must start with a letter and contain only lowercase letters, numbers, underscore');
-    return null;
-  }
+  // Format, length, and uniqueness checks apply to new alerts and custom renames
+  if (!isBuiltIn) {
+    if (!/^[a-z][a-z0-9_]*$/.test(name)) {
+      showToast('Name must start with a letter and contain only lowercase letters, numbers, underscore');
+      return null;
+    }
 
-  if (!isEditing && name.length > 20) {
-    showToast('Name must be 20 characters or less');
-    return null;
-  }
+    if (name.length > 20) {
+      showToast('Name must be 20 characters or less');
+      return null;
+    }
 
-  if (!isEditing && !builtInAlerts[name] && customAlerts[name]) {
-    showToast('A custom alert with this name already exists');
-    return null;
+    // Only check uniqueness when name actually changes
+    if (name !== editingName && (builtInAlerts[name] || customAlerts[name])) {
+      showToast('An alert with this name already exists');
+      return null;
+    }
   }
 
   if (!displayName) {
@@ -335,7 +339,8 @@ function validateAlertForm() {
   }
 
   return {
-    name: isEditing ? editingAlertInput.value : name,
+    name,
+    editingName,
     displayName,
     emoji,
     backgroundColor: alertBgColorInput.value,
@@ -348,6 +353,11 @@ function saveAlert(e) {
   e.preventDefault();
   const alert = validateAlertForm();
   if (!alert) return;
+
+  // When a custom alert is renamed, remove the old key
+  if (alert.editingName && alert.editingName !== alert.name) {
+    delete customAlerts[alert.editingName];
+  }
 
   customAlerts[alert.name] = {
     displayName: alert.displayName,
@@ -385,6 +395,33 @@ function deleteCustomAlert(name) {
     convert();
     showToast('Alert deleted');
   }
+}
+
+function duplicateAlert(name) {
+  const defaultAlert = builtInAlerts[name] || {};
+  const customAlert = customAlerts[name] || {};
+  const source = { ...defaultAlert, ...customAlert };
+
+  const base = name.slice(0, 15);
+  let candidate = `${base}_copy`;
+  let i = 2;
+  while (builtInAlerts[candidate] || customAlerts[candidate]) {
+    candidate = `${base}_copy_${i++}`;
+  }
+
+  customAlerts[candidate] = {
+    displayName: source.displayName || name.toUpperCase(),
+    emoji: source.emoji || '📋',
+    backgroundColor: source.backgroundColor || '#f0f0f0',
+    textColor: source.textColor || '#333333',
+    borderColor: source.borderColor || '#666666'
+  };
+
+  saveCustomAlertsToStorage();
+  renderAlertsList();
+  renderAlertPicker();
+  convert();
+  showToast(`Duplicated as ${candidate.toUpperCase()}`);
 }
 
 // ==================== Import/Export ====================
@@ -535,7 +572,7 @@ function handleSnippetAction(e) {
     const snippet = snippets.find(s => s.id === id);
     if (snippet) {
       insertSnippetIntoInput(snippet.content);
-      closeSettingsModal();
+      switchToTab('Converter');
     }
   }
 }
@@ -649,19 +686,16 @@ importBtn.addEventListener('click', importAlerts);
 exportBtn.addEventListener('click', exportAlerts);
 importFileInput.addEventListener('change', handleImportFile);
 
-// Tab switching
-document.getElementById('tabAlerts').addEventListener('click', () => {
-  document.getElementById('tabAlerts').classList.add('active');
-  document.getElementById('tabSnippets').classList.remove('active');
-  document.getElementById('alertsTab').classList.remove('hidden');
-  document.getElementById('snippetsTab').classList.add('hidden');
-});
-document.getElementById('tabSnippets').addEventListener('click', () => {
-  document.getElementById('tabSnippets').classList.add('active');
-  document.getElementById('tabAlerts').classList.remove('active');
-  document.getElementById('snippetsTab').classList.remove('hidden');
-  document.getElementById('alertsTab').classList.add('hidden');
-});
+// Top-level tab switching
+function switchToTab(name) {
+  ['Converter', 'Alerts', 'Snippets'].forEach(n => {
+    document.getElementById(`tab${n}`).classList.toggle('active', n === name);
+    document.getElementById(`panel${n}`).classList.toggle('hidden', n !== name);
+  });
+}
+document.getElementById('tabConverter').addEventListener('click', () => switchToTab('Converter'));
+document.getElementById('tabAlerts').addEventListener('click', () => switchToTab('Alerts'));
+document.getElementById('tabSnippets').addEventListener('click', () => switchToTab('Snippets'));
 
 // Snippet form event listeners
 document.getElementById('snippetForm').addEventListener('submit', saveSnippet);
@@ -696,19 +730,14 @@ quickSaveNameInput.addEventListener('keydown', (e) => {
 
 // Initialize
 async function init() {
-  // Load built-in alerts from library
   builtInAlerts = markdownServicenow.getBuiltInAlerts();
-
-  // Load custom alerts from storage
   await loadCustomAlertsFromStorage();
-
-  // Load snippets from storage
   await loadSnippetsFromStorage();
 
-  // Render alert picker
   renderAlertPicker();
+  renderAlertsList();
+  renderSnippetsList();
 
-  // Load saved input
   chrome.storage.local.get(['lastInput'], (result) => {
     if (result.lastInput) {
       inputEl.value = result.lastInput;
@@ -716,7 +745,6 @@ async function init() {
     }
   });
 
-  // Focus input
   inputEl.focus();
 }
 
