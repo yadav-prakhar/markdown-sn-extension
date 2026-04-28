@@ -5,6 +5,19 @@ All notable changes to the "Markdown to ServiceNow" extension will be documented
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2026-04-28
+
+### Added
+
+- **New Tab Layout** — popup now opens in a dedicated side-by-side tab view for more comfortable editing
+- **Duplicate Alert Detection** — warns before creating a custom alert with a name that already exists
+- Larger popup window and popover for more breathing room
+
+### Fixed
+
+- Success toast z-index corrected so it renders above modals
+- Emoji length validation fixed for custom alert names
+
 ## [3.1.0] - 2026-04-27
 
 ### Added
