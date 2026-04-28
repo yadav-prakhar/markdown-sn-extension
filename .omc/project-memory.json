@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1777271265402,
+  "lastScanned": 1777357985375,
   "projectRoot": "/Users/prakhar.yadav/Workspace/Side-Projects/Personal-Projects/markdown-sn-journal/MD-SN-Extension/main",
   "techStack": {
     "languages": [
@@ -30,7 +30,7 @@
   },
   "build": {
     "buildCommand": null,
-    "testCommand": "npm test 2>&1",
+    "testCommand": "npm test",
     "lintCommand": null,
     "devCommand": null,
     "scripts": {
@@ -69,7 +69,7 @@
       "path": "background",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1777271265375,
+      "lastAccessed": 1777357985364,
       "keyFiles": [
         "background.js"
       ]
@@ -78,7 +78,7 @@
       "path": "content",
       "purpose": null,
       "fileCount": 2,
-      "lastAccessed": 1777271265377,
+      "lastAccessed": 1777357985364,
       "keyFiles": [
         "content.css",
         "content.js"
@@ -88,7 +88,7 @@
       "path": "docs",
       "purpose": "Documentation",
       "fileCount": 4,
-      "lastAccessed": 1777271265393,
+      "lastAccessed": 1777357985367,
       "keyFiles": [
         "index.html",
         "test-setup.md"
@@ -98,7 +98,7 @@
       "path": "icons",
       "purpose": null,
       "fileCount": 7,
-      "lastAccessed": 1777271265394,
+      "lastAccessed": 1777357985367,
       "keyFiles": [
         "Icon.svg",
         "Icon128.png",
@@ -111,7 +111,7 @@
       "path": "lib",
       "purpose": "Library code",
       "fileCount": 1,
-      "lastAccessed": 1777271265395,
+      "lastAccessed": 1777357985368,
       "keyFiles": [
         "markdown-servicenow.js"
       ]
@@ -120,7 +120,7 @@
       "path": "popup",
       "purpose": null,
       "fileCount": 3,
-      "lastAccessed": 1777271265395,
+      "lastAccessed": 1777357985368,
       "keyFiles": [
         "popup.css",
         "popup.html",
@@ -131,7 +131,7 @@
       "path": "screenshots",
       "purpose": null,
       "fileCount": 3,
-      "lastAccessed": 1777271265395,
+      "lastAccessed": 1777357985368,
       "keyFiles": [
         "ss1.png",
         "ss2.png",
@@ -142,7 +142,7 @@
       "path": "scripts",
       "purpose": "Build/utility scripts",
       "fileCount": 2,
-      "lastAccessed": 1777271265395,
+      "lastAccessed": 1777357985368,
       "keyFiles": [
         "generate-icons.js",
         "install-hooks.sh"
@@ -152,14 +152,14 @@
       "path": "tests",
       "purpose": "Test files",
       "fileCount": 0,
-      "lastAccessed": 1777271265396,
+      "lastAccessed": 1777357985369,
       "keyFiles": []
     },
     "docs/lib": {
       "path": "docs/lib",
       "purpose": "Library code",
       "fileCount": 1,
-      "lastAccessed": 1777271265397,
+      "lastAccessed": 1777357985369,
       "keyFiles": [
         "markdown-servicenow.js"
       ]
@@ -168,7 +168,7 @@
       "path": "tests/fixtures",
       "purpose": "Test fixtures",
       "fileCount": 1,
-      "lastAccessed": 1777271265398,
+      "lastAccessed": 1777357985369,
       "keyFiles": [
         "markdown-samples.js"
       ]
@@ -177,7 +177,7 @@
       "path": "tests/mocks",
       "purpose": "Mock data",
       "fileCount": 1,
-      "lastAccessed": 1777271265399,
+      "lastAccessed": 1777357985370,
       "keyFiles": [
         "chrome-api.js"
       ]
@@ -192,8 +192,8 @@
     },
     {
       "path": "popup/popup.js",
-      "accessCount": 45,
-      "lastAccessed": 1777273417334,
+      "accessCount": 46,
+      "lastAccessed": 1777357169001,
       "type": "file"
     },
     {
@@ -204,8 +204,8 @@
     },
     {
       "path": "lib/markdown-servicenow.js",
-      "accessCount": 23,
-      "lastAccessed": 1775658641667,
+      "accessCount": 24,
+      "lastAccessed": 1777357244060,
       "type": "file"
     },
     {
@@ -216,20 +216,20 @@
     },
     {
       "path": "popup/popup.css",
-      "accessCount": 18,
-      "lastAccessed": 1777272859602,
+      "accessCount": 21,
+      "lastAccessed": 1777357733143,
       "type": "file"
     },
     {
       "path": "popup/popup.html",
-      "accessCount": 17,
-      "lastAccessed": 1777272859072,
+      "accessCount": 20,
+      "lastAccessed": 1777357735165,
       "type": "file"
     },
     {
       "path": "",
-      "accessCount": 17,
-      "lastAccessed": 1777276122715,
+      "accessCount": 18,
+      "lastAccessed": 1777357474319,
       "type": "directory"
     },
     {
@@ -333,6 +333,12 @@
       "accessCount": 1,
       "lastAccessed": 1777273405557,
       "type": "directory"
+    },
+    {
+      "path": "tests/unit/popup/popup.test.js",
+      "accessCount": 1,
+      "lastAccessed": 1777357483435,
+      "type": "file"
     }
   ],
   "userDirectives": []

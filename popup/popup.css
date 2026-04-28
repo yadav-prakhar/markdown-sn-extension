@@ -180,7 +180,7 @@ textarea#output {
   font-weight: 500;
   box-shadow: 0 4px 12px rgba(0, 200, 83, 0.3);
   transition: transform 0.3s ease;
-  z-index: 1000;
+  z-index: 20000;
 }
 
 .toast.show {
