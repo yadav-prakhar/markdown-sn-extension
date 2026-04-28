@@ -198,20 +198,20 @@
     },
     {
       "path": "popup/popup.css",
-      "accessCount": 33,
-      "lastAccessed": 1777361847098,
+      "accessCount": 35,
+      "lastAccessed": 1777363016197,
+      "type": "file"
+    },
+    {
+      "path": "popup/popup.html",
+      "accessCount": 28,
+      "lastAccessed": 1777363011183,
       "type": "file"
     },
     {
       "path": "content/content.css",
       "accessCount": 27,
       "lastAccessed": 1777272859551,
-      "type": "file"
-    },
-    {
-      "path": "popup/popup.html",
-      "accessCount": 27,
-      "lastAccessed": 1777361842954,
       "type": "file"
     },
     {
