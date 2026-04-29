@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -29,21 +31,48 @@ jobs:
             npm run build
           fi
 
-      - name: Create ZIP
+      - name: Extract version
+        id: get_version
         run: |
-          zip -r extension.zip . -x "*.git*" "node_modules/*" ".github/*"
+          VERSION=$(jq -r .version manifest.json)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Check if version changed
+        id: version_check
+        run: |
+          PREV_VERSION=$(git show HEAD~1:manifest.json | jq -r .version || echo "none")
+          CURR_VERSION=$(jq -r .version manifest.json)
+
+          echo "Previous: $PREV_VERSION"
+          echo "Current: $CURR_VERSION"
+
+          if [ "$PREV_VERSION" = "$CURR_VERSION" ]; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create ZIP
+        if: steps.version_check.outputs.changed == 'true'
+        run: |
+          zip -r markdown-to-servicenow-v${VERSION}.zip \
+            manifest.json \
+            $(ls -d background content popup lib icons 2>/dev/null) \
+            --exclude "*.DS_Store"
 
       - name: Upload artifact
+        if: steps.version_check.outputs.changed == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: chrome-extension
-          path: extension.zip
+          name: chrome-extension-v${{ env.VERSION }}
+          path: markdown-to-servicenow-v${{ env.VERSION }}.zip
 
       - name: Create Release
+        if: steps.version_check.outputs.changed == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ github.run_number }}
-          name: Release v${{ github.run_number }}
-          files: extension.zip
+          tag_name: v${{ env.VERSION }}
+          name: v${{ env.VERSION }}
+          files: markdown-to-servicenow-v${{ env.VERSION }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
