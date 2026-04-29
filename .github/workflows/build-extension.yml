@@ -12,7 +12,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0  # required to fetch tags
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -37,16 +37,24 @@ jobs:
           VERSION=$(jq -r .version manifest.json)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Check if version changed
+      - name: Get latest tag
+        id: get_tag
+        run: |
+          git fetch --tags
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "none")
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+          echo "Latest tag: $LATEST_TAG"
+
+      - name: Check if version changed vs latest tag
         id: version_check
         run: |
-          PREV_VERSION=$(git show HEAD~1:manifest.json | jq -r .version || echo "none")
           CURR_VERSION=$(jq -r .version manifest.json)
+          LATEST_TAG_VERSION=${LATEST_TAG#v}
 
-          echo "Previous: $PREV_VERSION"
-          echo "Current: $CURR_VERSION"
+          echo "Latest tag version: $LATEST_TAG_VERSION"
+          echo "Current version: $CURR_VERSION"
 
-          if [ "$PREV_VERSION" = "$CURR_VERSION" ]; then
+          if [ "$LATEST_TAG_VERSION" = "$CURR_VERSION" ]; then
             echo "changed=false" >> $GITHUB_OUTPUT
           else
             echo "changed=true" >> $GITHUB_OUTPUT
