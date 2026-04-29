@@ -1,0 +1,49 @@
+name: Build Chrome Extension
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: |
+          if [ -f package.json ]; then
+            npm install
+          fi
+
+      - name: Build (if applicable)
+        run: |
+          if [ -f package.json ] && grep -q "build" package.json; then
+            npm run build
+          fi
+
+      - name: Create ZIP
+        run: |
+          zip -r extension.zip . -x "*.git*" "node_modules/*" ".github/*"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrome-extension
+          path: extension.zip
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: Release v${{ github.run_number }}
+          files: extension.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
